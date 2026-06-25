@@ -24,10 +24,10 @@ services:
       # Сейчас :ro убран для разработки, чтобы можно было копировать файлы
       # План: создать Dockerfile.nginx и использовать build вместо volume
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./babichChat/babich-ui/dist/babich-ui/browser:/usr/share/nginx/html
+      - ./babich-chat/babich-chat-ui/dist/babich-chat-ui/browser:/usr/share/nginx/html
       # Для продакшена использовать:
       # - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # - ./babich-ui/dist/babich-ui/browser:/usr/share/nginx/html:ro
+      # - ./babich-chat-ui/dist/babich-chat-ui/browser:/usr/share/nginx/html:ro
     restart: unless-stopped
 
 volumes:

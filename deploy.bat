@@ -34,10 +34,10 @@ echo ✅ Docker is running
 echo.
 
 REM Переходим в папку Angular
-echo 📁 Changing to babich-ui folder...
-cd babichChat/babich-ui
+echo 📁 Changing to babich-chat-ui folder...
+cd babichChat/babich-chat-ui
 if errorlevel 1 (
-    echo ❌ babich-ui folder not found!
+    echo ❌ babich-chat-ui folder not found!
     echo    Current directory: %cd%
     pause
     exit /b 1
@@ -48,7 +48,7 @@ echo.
 REM Проверяем наличие package.json
 echo 🔍 Checking package.json...
 if not exist package.json (
-    echo ❌ package.json not found in babich-ui folder!
+    echo ❌ package.json not found in babich-chat-ui folder!
     pause
     exit /b 1
 )
@@ -93,7 +93,7 @@ if errorlevel 1 (
     echo ❌ Failed to build Angular application!
     echo.
     echo Try running manually:
-    echo    cd babich-ui
+    echo    cd babich-chat-ui
     echo    npx ng build --configuration=production
     pause
     exit /b 1
@@ -103,13 +103,13 @@ echo.
 
 REM Проверяем наличие собранных файлов
 echo 🔍 Checking build output...
-if exist dist\babich-ui\browser\index.html (
-    echo ✅ Built files found at: dist\babich-ui\browser\
+if exist dist\babich-chat-ui\browser\index.html (
+    echo ✅ Built files found at: dist\babich-chat-ui\browser\
 ) else (
     echo ❌ Built files not found!
-    echo Expected: dist\babich-ui\browser\index.html
+    echo Expected: dist\babich-chat-ui\browser\index.html
     echo Actual files:
-    dir dist\babich-ui\
+    dir dist\babich-chat-ui\
     pause
     exit /b 1
 )
@@ -170,6 +170,6 @@ echo    View logs:  docker-compose logs -f
 echo    Stop:       docker-compose down
 echo    Restart:    docker-compose restart
 echo.
-echo 📂 Build folder: babich-ui/dist/babich-ui/browser/
+echo 📂 Build folder: babich-chat-ui/dist/babich-chat-ui/browser/
 echo ==========================================
 pause

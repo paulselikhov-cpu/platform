@@ -36,21 +36,21 @@ echo "✅ Docker is running"
 echo ""
 
 # Переходим в папку Angular
-echo "📁 Changing to babich-ui folder..."
-if [ ! -d "babich-ui" ]; then
-    echo "❌ babich-ui folder not found!"
+echo "📁 Changing to babich-chat-ui folder..."
+if [ ! -d "babich-chat-ui" ]; then
+    echo "❌ babich-chat-ui folder not found!"
     echo "   Current directory: $(pwd)"
     read -p "Press Enter to exit..."
     exit 1
 fi
-cd babich-ui || exit 1
+cd babich-chat-ui || exit 1
 echo "✅ Folder found"
 echo ""
 
 # Проверяем наличие package.json
 echo "🔍 Checking package.json..."
 if [ ! -f "package.json" ]; then
-    echo "❌ package.json not found in babich-ui folder!"
+    echo "❌ package.json not found in babich-chat-ui folder!"
     read -p "Press Enter to exit..."
     exit 1
 fi
@@ -91,7 +91,7 @@ if ! npx ng build --configuration=production; then
     echo "❌ Failed to build Angular application!"
     echo ""
     echo "Try running manually:"
-    echo "   cd babich-ui"
+    echo "   cd babich-chat-ui"
     echo "   npx ng build --configuration=production"
     read -p "Press Enter to exit..."
     exit 1
@@ -101,13 +101,13 @@ echo ""
 
 # Проверяем наличие собранных файлов
 echo "🔍 Checking build output..."
-if [ -f "dist/babich-ui/browser/index.html" ]; then
-    echo "✅ Built files found at: dist/babich-ui/browser/"
+if [ -f "dist/babich-chat-ui/browser/index.html" ]; then
+    echo "✅ Built files found at: dist/babich-chat-ui/browser/"
 else
     echo "❌ Built files not found!"
-    echo "Expected: dist/babich-ui/browser/index.html"
+    echo "Expected: dist/babich-chat-ui/browser/index.html"
     echo "Actual files:"
-    ls -la dist/babich-ui/
+    ls -la dist/babich-chat-ui/
     read -p "Press Enter to exit..."
     exit 1
 fi
