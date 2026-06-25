@@ -1,0 +1,4 @@
+# Ignore nested repository
+/babich-app
+/babich-chat
+/platform-ui
