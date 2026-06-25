@@ -35,7 +35,7 @@ echo.
 
 REM Переходим в папку Angular
 echo 📁 Changing to babich-chat-ui folder...
-cd babichChat/babich-chat-ui
+cd babich-chat/babich-chat-ui
 if errorlevel 1 (
     echo ❌ babich-chat-ui folder not found!
     echo    Current directory: %cd%
