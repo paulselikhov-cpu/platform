@@ -85,30 +85,30 @@ if not exist node_modules (
 )
 echo.
 
-REM Собираем два приложения с разными base-href ###
+REM Собираем два приложения
 echo 📦 Building Angular applications...
 echo.
-echo 1) Building babich-chat-ui (base-href=/chat/)...
-call npx ng run babich-chat-ui:build:production -- --base-href=/chat/
+echo 1) Building babich-chat-ui
+call npx ng run babich-chat-ui:build:production
 if errorlevel 1 (
     echo ❌ Failed to build babich-chat-ui!
     echo.
     echo Try running manually:
     echo    cd platform-ui
-    echo    npx ng run babich-chat-ui:build:production -- --base-href=/chat/
+    echo    npx ng run babich-chat-ui:build:production
     pause
     exit /b 1
 )
 echo ✅ babich-chat-ui build completed!
 echo.
-echo 2) Building platform (base-href=/platform/)...
-call npx ng run platform:build:production -- --base-href=/platform/
+echo 2) Building platform
+call npx ng run platform:build:production
 if errorlevel 1 (
     echo ❌ Failed to build platform!
     echo.
     echo Try running manually:
     echo    cd platform-ui
-    echo    npx ng run platform:build:production -- --base-href=/platform/
+    echo    npx ng run platform:build:production
     pause
     exit /b 1
 )
