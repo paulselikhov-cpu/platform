@@ -24,7 +24,10 @@ services:
       # Сейчас :ro убран для разработки, чтобы можно было копировать файлы
       # План: создать Dockerfile.nginx и использовать build вместо volume
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./babich-chat/babich-chat-ui/dist/babich-chat-ui/browser:/usr/share/nginx/html
+      # platform host
+      - ./platform-ui/dist/platform/browser:/usr/share/nginx/platform
+      # babich-chat-ui
+      - ./platform-ui/dist/babich-chat-ui/browser:/usr/share/nginx/chat
       # Для продакшена использовать:
       # - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       # - ./babich-chat-ui/dist/babich-chat-ui/browser:/usr/share/nginx/html:ro

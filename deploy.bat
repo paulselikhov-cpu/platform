@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-echo 🚀 Starting Angular deployment...
+echo 🚀 Starting Angular deployment (two apps)...
 echo.
 
 REM Проверяем наличие Docker
@@ -33,11 +33,11 @@ if errorlevel 1 (
 echo ✅ Docker is running
 echo.
 
-REM Переходим в папку Angular
-echo 📁 Changing to babich-chat-ui folder...
-cd babich-chat/babich-chat-ui
+REM ### ИЗМЕНЕНО: Переходим в папку platform-ui
+echo 📁 Changing to platform-ui folder...
+cd platform-ui
 if errorlevel 1 (
-    echo ❌ babich-chat-ui folder not found!
+    echo ❌ platform-ui folder not found!
     echo    Current directory: %cd%
     pause
     exit /b 1
@@ -48,7 +48,7 @@ echo.
 REM Проверяем наличие package.json
 echo 🔍 Checking package.json...
 if not exist package.json (
-    echo ❌ package.json not found in babich-chat-ui folder!
+    echo ❌ package.json not found in platform-ui folder!
     pause
     exit /b 1
 )
@@ -85,37 +85,63 @@ if not exist node_modules (
 )
 echo.
 
-REM Собираем Angular
-echo 📦 Building Angular application...
-echo Command: ng build --configuration=production
-call npx ng build --configuration=production
+REM Собираем два приложения с разными base-href ###
+echo 📦 Building Angular applications...
+echo.
+echo 1) Building babich-chat-ui (base-href=/chat/)...
+call npx ng run babich-chat-ui:build:production -- --base-href=/chat/
 if errorlevel 1 (
-    echo ❌ Failed to build Angular application!
+    echo ❌ Failed to build babich-chat-ui!
     echo.
     echo Try running manually:
-    echo    cd babich-chat-ui
-    echo    npx ng build --configuration=production
+    echo    cd platform-ui
+    echo    npx ng run babich-chat-ui:build:production -- --base-href=/chat/
     pause
     exit /b 1
 )
-echo ✅ Build completed successfully!
+echo ✅ babich-chat-ui build completed!
+echo.
+echo 2) Building platform (base-href=/platform/)...
+call npx ng run platform:build:production -- --base-href=/platform/
+if errorlevel 1 (
+    echo ❌ Failed to build platform!
+    echo.
+    echo Try running manually:
+    echo    cd platform-ui
+    echo    npx ng run platform:build:production -- --base-href=/platform/
+    pause
+    exit /b 1
+)
+echo ✅ platform build completed!
 echo.
 
-REM Проверяем наличие собранных файлов
-echo 🔍 Checking build output...
-if exist dist\babich-chat-ui\browser\index.html (
-    echo ✅ Built files found at: dist\babich-chat-ui\browser\
+REM Проверяем наличие выходных файлов для обоих приложений ###
+echo 🔍 Checking build outputs...
+set CHAT_INDEX=dist\babich-chat-ui\browser\index.html
+set PLATFORM_INDEX=dist\platform\browser\index.html
+if exist %CHAT_INDEX% (
+    echo ✅ Chat built files found at: dist\babich-chat-ui\browser\
 ) else (
-    echo ❌ Built files not found!
-    echo Expected: dist\babich-chat-ui\browser\index.html
-    echo Actual files:
-    dir dist\babich-chat-ui\
+    echo ❌ Chat built files not found!
+    echo Expected: %CHAT_INDEX%
+    echo Actual files in dist:
+    dir dist\
+    pause
+    exit /b 1
+)
+if exist %PLATFORM_INDEX% (
+    echo ✅ Platform built files found at: dist\platform\browser\
+) else (
+    echo ❌ Platform built files not found!
+    echo Expected: %PLATFORM_INDEX%
+    echo Actual files in dist:
+    dir dist\
     pause
     exit /b 1
 )
 echo.
 
-REM Возвращаемся в корень
+REM Возвращаемся в корень (откуда был запущен скрипт)
 cd ..
 echo 📁 Returned to root folder
 echo.
@@ -143,33 +169,50 @@ echo 🔍 Container status:
 docker-compose ps
 echo.
 
-REM Проверяем, что сайт отвечает
-echo 🔍 Testing website...
-curl -s -o nul -w "%%{http_code}" http://localhost > status.txt
-set /p HTTP_STATUS=<status.txt
-del status.txt
-if "%HTTP_STATUS%"=="200" (
-    echo ✅ Website is responding with status 200
+REM Проверяем доступность обоих приложений ###
+echo 🔍 Testing websites...
+set CHAT_STATUS=000
+set PLATFORM_STATUS=000
+
+curl -s -o nul -w "%%{http_code}" http://localhost/chat > chat_status.txt
+set /p CHAT_STATUS=<chat_status.txt
+del chat_status.txt
+
+curl -s -o nul -w "%%{http_code}" http://localhost/platform > platform_status.txt
+set /p PLATFORM_STATUS=<platform_status.txt
+del platform_status.txt
+
+if "%CHAT_STATUS%"=="200" (
+    echo ✅ Chat is responding with status 200
 ) else (
-    echo ⚠️ Website returned status: %HTTP_STATUS%
+    echo ⚠️ Chat returned status: %CHAT_STATUS%
+    echo    Try checking logs: docker-compose logs nginx
+)
+if "%PLATFORM_STATUS%"=="200" (
+    echo ✅ Platform is responding with status 200
+) else (
+    echo ⚠️ Platform returned status: %PLATFORM_STATUS%
     echo    Try checking logs: docker-compose logs nginx
 )
 
 echo.
 
 echo ==========================================
-echo ✅ SUCCESS! Application is ready!
+echo ✅ SUCCESS! Applications are ready!
 echo ==========================================
 echo.
-echo 🌐 Frontend: http://localhost
-echo 📡 API:      http://localhost/api/users
-echo 📊 Database: localhost:5432
+echo 🌐 Chat:      http://localhost/chat
+echo 🌐 Platform:  http://localhost/platform
+echo 📡 API:      http://localhost/api/users   (if configured)
+echo 📊 Database: localhost:5432 (if used)
 echo.
 echo 📋 Useful commands:
 echo    View logs:  docker-compose logs -f
 echo    Stop:       docker-compose down
 echo    Restart:    docker-compose restart
 echo.
-echo 📂 Build folder: babich-chat-ui/dist/babich-chat-ui/browser/
+echo 📂 Build folders:
+echo    Chat:      platform-ui/dist/babich-chat-ui/browser/
+echo    Platform:  platform-ui/dist/platform/browser/
 echo ==========================================
 pause
