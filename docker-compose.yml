@@ -17,6 +17,8 @@ services:
   nginx:
     image: nginx:alpine
     container_name: babich-nginx
+    extra_hosts:
+    - "host.docker.internal:host-gateway" # это чтобы заходить на localhost
     ports:
       - "80:80"
     volumes:
@@ -31,6 +33,7 @@ services:
       # Для продакшена использовать:
       # - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       # - ./babich-chat-ui/dist/babich-chat-ui/browser:/usr/share/nginx/html:ro
+      - ./static:/usr/share/nginx/static
     restart: unless-stopped
 
 volumes:

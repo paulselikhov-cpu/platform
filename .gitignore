@@ -1,3 +1,4 @@
 # Ignore nested repository
 /babich-app
 /platform-ui
+/static
