@@ -1,4 +1,4 @@
-# Архитектура online-tracking (онлайн-статусы)
+# Архитектура Presence (онлайн-статусы)
 
 ## Проблема, которую решаем
 
@@ -6,6 +6,10 @@
 
 1. **Список локаций в сайдбаре** — нужно только число онлайн-пользователей на каждую локацию (может быть десятки локаций одновременно на экране).
 2. **Открытая локация** — нужен полный список id пользователей + детальные события (кто зашёл, в какую комнату, кто вышел), чтобы patch-ить список участников и красить индикаторы онлайна на аватарках.
+
+Изначально оба сценария использовали один и тот же тяжёлый путь (`getOnlineCharacterIds` + подписка на детальный WS-топик на каждую локацию), что для сайдбара было избыточно: N локаций → N HTTP-запросов + N WS-подписок ради одной циферки.
+
+Разделили на два независимых, каждый заточенный под свою задачу.
 
 ---
 
@@ -148,15 +152,30 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    Enter["PresenceService.enterRoom()"] --> Save[(CharacterPresence)]
-    Save --> B1["broadcastPresenceOnline"]
-    B1 --> T1["/topic/location.{id}.presence<br/>PresenceEvent(characterId, online, roomId)"]
-    B1 --> T2["/topic/locations.presence-counts<br/>LocationPresenceCountEvent(locationId, online)"]
+    Enter["PresenceService.enterRoom()"] --> Check{"смена локации,<br/>а не просто комнаты?"}
 
-    Disconnect["handleDisconnect() /<br/>cleanupStalePresences()"] --> B2["broadcastPresenceOffline"]
-    B2 --> T1
-    B2 --> T2
+    Check -->|"всегда"| Detail1["broadcastPresenceDetail(online=true)"]
+    Detail1 --> T1["/topic/location.{id}.presence<br/>PresenceEvent(characterId, online, roomId)"]
+
+    Check -->|"да"| Count1["broadcastPresenceCount(online=true)"]
+    Count1 --> T2["/topic/locations.presence-counts<br/>LocationPresenceCountEvent(locationId, online)"]
+
+    Check -->|"да, для ПРЕЖНЕЙ локации"| Detail2["broadcastPresenceDetail(online=false)"]
+    Check -->|"да, для ПРЕЖНЕЙ локации"| Count2["broadcastPresenceCount(online=false)"]
+    Detail2 --> T1
+    Count2 --> T2
+
+    Disconnect["handleDisconnect() /<br/>cleanupStalePresences()"] --> Detail3["broadcastPresenceDetail(online=false)"]
+    Disconnect --> Count3["broadcastPresenceCount(online=false)"]
+    Detail3 --> T1
+    Count3 --> T2
 ```
+
+> ⚠️ **Важный нюанс (исправленный баг):** при смене комнаты внутри одной и той же локации `enterRoom` вызывается заново, но это **не** должно увеличивать счётчик в сайдбаре — человек и так уже был online в этой локации. Поэтому рассылка разделена на два независимых метода:
+> - **`broadcastPresenceDetail`** — шлётся в детальный топик **при каждом** вызове `enterRoom`, в том числе при смене комнаты (нужно, чтобы `LocationUsersMenu` видел актуальный `roomId`).
+> - **`broadcastPresenceCount`** — шлётся в топик счётчиков **только** когда персонаж реально входит в новую локацию или покидает прежнюю (`enteringNewLocation = !locationId.equals(previousLocationId)`), а не при смене комнаты внутри той же локации.
+>
+> При `handleDisconnect`/`cleanupStalePresences` (реальное отключение) оба топика всегда получают `offline` — здесь разделения не требуется, так как это гарантированно настоящий уход из локации.
 
 ### Эндпоинты
 
@@ -172,7 +191,9 @@ flowchart LR
 | `/topic/location.{id}.presence` | `PresenceEvent(characterId, online, roomId)` | `OnlineTrackingService`, по одной подписке на открытую локацию |
 | `/topic/locations.presence-counts` | `LocationPresenceCountEvent(locationId, online)` | `OnlineTrackingSidebarService`, одна подписка на всё приложение |
 
-Каждое presence-событие на бэке (`broadcastPresenceOnline`/`broadcastPresenceOffline`) рассылается **в оба топика одновременно** — так оба сценария (сайдбар и открытая локация) получают актуальные данные без дублирования HTTP/WS-инфраструктуры на бэке.
+Раньше рассылка в оба топика происходила безусловно при каждом вызове `enterRoom`, что приводило к багу: переключение комнат **внутри одной локации** ошибочно увеличивало счётчик в сайдбаре, хотя реальное число уникальных онлайн-пользователей не менялось. Теперь рассылка разделена:
+- в детальный топик (`/topic/location.{id}.presence`) событие уходит **при каждой** смене комнаты — это ожидаемо, участники локации должны видеть, кто в какой комнате;
+- в топик счётчиков (`/topic/locations.presence-counts`) событие уходит **только** при реальном входе в локацию или выходе из неё — не при смене комнаты внутри той же локации.
 
 ---
 
