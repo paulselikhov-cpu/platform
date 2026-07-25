@@ -32,19 +32,24 @@ com.platform/
 - `Location`, `Room`, `LocationMember`, `LocationTemplate`, `TemplateRoom`
 - `Message`, `RoomReadStatus`, `CharacterPresence` (онлайн-трекинг)
 
-### 2.2 Районы и системные локации — ГОТОВО
-(см. `documentation/districts-and-public-locations.md` — подробности)
+### 2.2 Районы и системные локации — ГОТОВО (рефакторинг 2026-07-25)
 
-- `District` (code, name, description) ↔ `PublicLocation`
+**Архитектурное изменение:** сущности `PublicLocation` больше нет. Системные и пользовательские локации объединены в единую таблицу `locations` с флагом `isSystem`.
+
+- `District` (code, name, description) ↔ `Location` (единая сущность)
 - `PublicLocationType` enum — 8 системных типов:
   `CITY_HALL`, `LENIN_SQUARE`, `POLICE_STATION`, `PRISON`, `BANK`,
   `WAREHOUSE`, `GENERAL_MARKET`, `REAL_ESTATE_MARKET`
-- `Room` теперь опционально принадлежит либо `Location`, либо `PublicLocation`
-- Автосоздание дефолтного района "Центральный" + 8 системных локаций при старте
+- `Location.isSystem` (boolean) — отличает системные локации от пользовательских
+- `Location.type` (PublicLocationType) — только для системных локаций
+- `Location.district` `NOT NULL` — каждая локация привязана к району
+- `Location.owner` nullable — у системных локаций нет владельца
+- `Room` принадлежит `Location` (единый FK, без дублирования на `PublicLocation`)
+- `CharacterPresence` ссылается на `Location` — presence работает для любых локаций
+- Автосоздание дефолтного района "Центральный" + 8 системных локаций при старте (`DataInitializer`)
 - Backend API: `GET /api/districts`, `/api/districts/{id}`,
-  `/api/districts/{id}/public-locations`
-- Frontend: модели (`district.interface.ts`, `public-location.interface.ts`,
-  `public-location-type.enum.ts`), `district.service.ts`, интеграция в sidebar
+  `/api/districts/{id}/system-locations`
+- Frontend: модели (`district.interface.ts` с `systemLocations`), `district.service.ts`, интеграция в sidebar
 
 ### 2.3 Экономический слой — ГОТОВО (MVP-уровень)
 Поля в `ChatUser`:
