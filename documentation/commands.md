@@ -12,6 +12,10 @@ cd babich-app && mvn clean install -DskipTests
 # Запуск backend
 cd babich-app && mvn spring-boot:run
 
+# Запуск backend в фоне + хвост логов (30 секунд, потом автостоп)
+cd babich-app && mvn spring-boot:run 2>&1 &
+PID=$!; sleep 30; kill $PID 2>/dev/null; wait $PID 2>/dev/null
+
 # Запуск конкретного теста
 cd babich-app && mvn test -Dtest=TestClassName
 ```
@@ -65,3 +69,17 @@ git status
 
 # Добавить все изменения (только add, пушить нельзя — правило проекта)
 git add -A
+```
+
+## Процессы и порты
+
+```bash
+# Проверить какой процесс на порту 8080
+netstat -ano | grep :8080
+
+# Принудительно убить все java-процессы (кроме IntelliJ)
+taskkill //F //IM java.exe //FI "PID ne $(ps -W | grep -i "idea\|intellij" | awk '{print $1}')"
+
+# Убить конкретный процесс по PID
+taskkill //PID <PID> //F
+```

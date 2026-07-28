@@ -28,6 +28,7 @@
 | Ранняя подписка на WS-топики | [`architecture/websocket/early-topic-subscription.md`](architecture/websocket/early-topic-subscription.md) |
 | Stomp/Chat сервисы | [`architecture/websocket/stomp-and-chat-service.md`](architecture/websocket/stomp-and-chat-service.md) |
 | Районы и системные локации | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
+| Должности в системных локациях (LocationPost) | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
 
 ## Сценарии
 
@@ -48,3 +49,5 @@
 | 8 | Банк | ❌ |
 | 9 | Рынок (аренда прилавков) | ❌ |
 | 10 | Заглушка рынка недвижимости | ❌ |
+| 11 | LocationPost — должности в системных локациях | ✅ |
+| 12 | Авто-членство в системных локациях | ✅ |
