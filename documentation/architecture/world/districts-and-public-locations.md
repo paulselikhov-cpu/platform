@@ -71,9 +71,9 @@
 
 | Должность | Локация | Тип | Слотов | Описание |
 |-----------|---------|-----|--------|----------|
-| GOVERNOR | CITY_HALL | appointedRole | 1 | Глава администрации района |
-| MAYOR | CITY_HALL | appointedRole | N | Мэр (назначается/избирается) |
-| DEPUTY | CITY_HALL | appointedRole | N | Депутат |
+| GOVERNOR | CITY_HALL | appointedRole | 1 | Глава администрации района (назначается/избирается) |
+| MAYOR | CITY_HALL | appointedRole | N | Мэр (назначается) |
+| DEPUTY | CITY_HALL | appointedRole | N | Депутат (назначается) |
 | POLICE_OFFICER | POLICE_STATION | civicRole | N | Полицейский (фиксированное число слотов на район) |
 | BANK_DIRECTOR | BANK | appointedRole | 1 | Директор банка |
 | BANK_EMPLOYEE | BANK | appointedRole | N | Сотрудник банка |
