@@ -22,20 +22,25 @@
 
 | Тема | Файл |
 |------|------|
+| Event-driven архитектура (концепция) | [`architecture/event/babichchat-event-architecture.md`](architecture/event/babichchat-event-architecture.md) |
+| Event-driven архитектура (план миграции) | [`architecture/event/event-migration-plan.md`](architecture/event/event-migration-plan.md) — Этапы 1, 1.5, 2, 3, 4, 5, 6 ✅, следующий — 7 |
+| Как пользоваться event-архитектурой (инструкция для разработчика) | [`architecture/event/how-to-use-event-architecture.md`](architecture/event/how-to-use-event-architecture.md) — простым языком: ментальная модель, словарик, рецепт нового сценария, примеры из кода, DoD |
 | Read status / seen-by | [`architecture/chat/read-status.md`](architecture/chat/read-status.md) |
+| Лавина планировщиков при clock leap (fixedRate → fixedDelay) | [`architecture/chat/scheduler-clock-leap-fixed-rate-avalanche.md`](architecture/chat/scheduler-clock-leap-fixed-rate-avalanche.md) |
 | Синхронизация LocationUsersMenu | [`architecture/presence/location-users-menu-sync.md`](architecture/presence/location-users-menu-sync.md) |
 | Presence-архитектура | [`architecture/presence/online-tracking.md`](architecture/presence/online-tracking.md) |
 | Ранняя подписка на WS-топики | [`architecture/websocket/early-topic-subscription.md`](architecture/websocket/early-topic-subscription.md) |
 | Stomp/Chat сервисы | [`architecture/websocket/stomp-and-chat-service.md`](architecture/websocket/stomp-and-chat-service.md) |
 | Районы и системные локации | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
 | Должности в системных локациях (LocationPost) | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
+| Четырёхслойная архитектура election-сценария | [`scenarios/the-first-election.md`](scenarios/the-first-election.md) (см. таблицы Layers 1–4) |
 
 ## Сценарии
 
 | Сценарий | Статус | Файл |
 |----------|--------|------|
 | №1. Первый вход в дефолтный район | ✅ Реализовано | [`scenarios/entry-default-district.md`](scenarios/entry-default-district.md) |
-| №2. Первые выборы | ❌ Не реализовано | [`scenarios/the-first-election.md`](scenarios/the-first-election.md) |
+| №2. Первые выборы | ✅ Реализовано (backend, Event-Driven: ElectionResultHandlerAdapter + PollClosedEvent) | [`scenarios/the-first-election.md`](scenarios/the-first-election.md) |
 
 ## Прогресс MVP
 

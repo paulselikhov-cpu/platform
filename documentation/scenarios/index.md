@@ -1,6 +1,8 @@
 # Сценарии (индекс)
 
-- entry-default-district.md — Сценарий №1. Первый вход в дефолтный район
-- create-character.md — Сценарий №1.1. Создание персонажа
-- delete-person-from-district.md — Сценарий №1.2. Удаление персонажа из района
-- the-first-election.md - Сценарий №2. Первые выборы
+| Сценарий | Статус | Файл |
+|----------|--------|------|
+| №1. Первый вход в дефолтный район | ✅ Реализовано | [`entry-default-district.md`](entry-default-district.md) |
+| №1.1. Создание персонажа | ✅ Реализовано | [`create-character.md`](create-character.md) |
+| №1.2. Удаление персонажа из района | ❌ Не реализовано | [`delete-person-from-district.md`](delete-person-from-district.md) |
+| №2. Первые выборы | ✅ Реализовано (backend, Event-Driven: ElectionResultHandlerAdapter + PollClosedEvent) | [`the-first-election.md`](the-first-election.md) |

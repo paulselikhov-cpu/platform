@@ -1,7 +1,7 @@
 # Статус проекта BabichChat
 
 ## Последнее обновление
-2026-07-28 (LocationPost + авто-членство в системных локациях)
+2026-08-06 (Этап 6 событийной архитектуры: PollResultDispatcher — диспетчеризация PollResultHandler по PollType, ElectionResultHandlerAdapter (назначение губернатора), событие PollClosedEvent, DoD-тест PollClosedEventIntegrationTest зелёный)
 
 ## Сводка прогресса
 
@@ -17,6 +17,7 @@
 | Выбор района (DistrictSelect) | ✅ Завершено | Проверка персонажа, профиль, вход |
 | Чат (комнаты) | ✅ Завершено | WebSocket-чаты в комнатах локаций |
 | Экономика (тап-фарм) | ✅ Завершено | Работа дворником, монеты, энергия |
+| Покупка первого жилья (аудит) | ✅ Завершено | BuyFirstLocationHandler переведён на RewardService.takeCoins — покупка пишет аудит TransactionLog (LOCATION_CREATE) |
 | Покупка первого жилья | ✅ Завершено | Заявка в мэрию, проверка HOMELESS, создание Location |
 | LocationPost (должности) | ✅ Завершено | Таблица location_posts, enum LocationPostType, сервис, контроллер |
 | Авто-членство в системных локациях | ✅ Завершено | При создании персонажа — автоматическое добавление location_members для всех isSystem=true локаций района |
@@ -28,7 +29,7 @@
 | №1. Первый вход в дефолтный район | ✅ Реализован |
 | №1.1. Создание персонажа | ✅ Реализован |
 | №1.2. Удаление персонажа из района | ❌ Не реализован |
-| №2. Первые выборы | ❌ Не реализован |
+| №2. Первые выборы | ✅ Реализован (backend) |
 
 ### Технические задачи
 
@@ -47,3 +48,39 @@
 | Авто-членство в системных локациях | ✅ Выполнено |
 | DB migration (add-location-posts.sql) | ✅ Выполнено |
 | Актуализация документации (districts-and-public-locations.md) | ✅ Выполнено |
+| Четырёхслойная архитектура: Entity → Facade → Service → Handler | ✅ Выполнено (election) |
+| ElectionScheduler — @Scheduled(fixedRate=60s) | ✅ Выполнено |
+| Campaign + CampaignContribution entity/service | ✅ Выполнено |
+| Notification + NotificationService (рассылка по району) | ✅ Выполнено |
+| PersonLevel (гейт уровня 3 для старта выборов) | ✅ Выполнено |
+| PollVoteRepository — countVotesPerCandidate, sumVoteWeightByPollId | ✅ Выполнено |
+| Кворум от живых участников района (50%) | ✅ Выполнено |
+| Core-модуль событийной архитектуры (DomainEvent, EventType, ScopeType, DomainEventPublisher) | ✅ Выполнено |
+| ElectionClosedEvent + NotificationEventListener (@TransactionalEventListener AFTER_COMMIT) | ✅ Выполнено |
+| ElectionFacade → публикация события вместо прямого вызова NotificationService (Слой 3 → Слой 4 убран) | ✅ Выполнено |
+| NotificationResponse DTO для WS-пуша /user/{username}/queue/notifications | ✅ Выполнено |
+| Уведомления при автозакрытии выборов по таймеру (раньше — дыра, слались только при ручном закрытии) | ✅ Выполнено |
+| RewardService публикует CoinsChangedEvent/XpChangedEvent | ✅ Выполнено |
+| TransactionLogEventListener (@ApplicationModuleListener) — аудит COIN/XP_USER в TransactionLog | ✅ Выполнено |
+| BuyFirstLocationHandler → RewardService.takeCoins (закрыта дыра в TransactionLog) | ✅ Выполнено |
+| RewardServiceAuditIntegrationTest (DoD Этапа 3, 5 тестов: giveCoins/takeCoins/overdraw/giveXp/покупка локации) | ✅ Выполнено |
+| Граница economy→core легализована (package-info, allowedDependencies = {chat, core}) | ✅ Выполнено |
+| ApplicationResolvedEvent (тип APPLICATION_RESOLVED) + регистрация в @JsonSubTypes DomainEvent | ✅ Выполнено |
+| ApplicationService публикует ApplicationResolvedEvent после разрешения заявки (handler.handle() + save) | ✅ Выполнено |
+| NotificationEventListener.onApplicationResolved (@ApplicationModuleListener) — уведомление заявителя (Notification + WS-пуш) | ✅ Выполнено |
+| ApplicationResolvedIntegrationTest (DoD Этапа 4, сквозной путь: submit → событие → подписчик → Notification) | ✅ Выполнено |
+| Граница civic→core легализована (package-info, allowedDependencies = {chat, core}) | ✅ Выполнено |
+| SchedulerGateway — единый @Scheduled (core.scheduler: TickHandler, ScheduledCheck, ScheduledCheckHandler, ScheduledCheckService, SchedulerGateway) | ✅ Выполнено |
+| ElectionScheduler удалён → PollCloseCheckHandler (реестр ScheduledCheck, dueAt=endsAt, делегирует в ElectionFacade.closeElection) | ✅ Выполнено |
+| PresenceService переведён на TickHandler (onTick, intervalMillis=15_000) | ✅ Выполнено |
+| Мёртвый код удалён: closeExpiredElections, closeExpiredPolls, findByStatusAndEndsAtBefore | ✅ Выполнено |
+| Граница chat→core легализована (package-info, PresenceService → TickHandler) | ✅ Выполнено |
+| SchedulerGatewayIntegrationTest (DoD Этапа 5, сквозной путь: ScheduledCheck → onTick → PollCloseCheckHandler → ElectionClosedEvent → Notification) | ✅ Выполнено |
+| PollResultDispatcher — выбор PollResultHandler по PollType (Map, собранная Spring'ом) | ✅ Выполнено |
+| PollResultHandler → SimplePollResultHandler (переименован) | ✅ Выполнено |
+| ElectionResultHandlerAdapter — назначение губернатора (LocationPost победителям по слотам) + публикация ElectionClosedEvent; прямой вызов из ElectionFacade убран | ✅ Выполнено |
+| PollClosedEvent (type=POLL_CLOSED, pollType String, resultSummary) в core.event + регистрация в @JsonSubTypes DomainEvent | ✅ Выполнено |
+| PollResultDispatcher публикует PollClosedEvent всегда (независимо от реализации хэндлера) | ✅ Выполнено |
+| ElectionResultHandler удалён | ✅ Выполнено |
+| PollClosedEventIntegrationTest (DoD Этапа 6, сквозной путь: closeElection → dispatcher → adapter → LocationPost → ElectionClosedEvent → Notification; PollClosedEventCaptor перехватывает событие) | ✅ Выполнено |
+| Полный mvn test — 13/13 зелёные | ✅ Выполнено |
