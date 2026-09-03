@@ -1,7 +1,7 @@
 # Статус проекта BabichChat
 
 ## Последнее обновление
-2026-08-06 (Этап 6 событийной архитектуры: PollResultDispatcher — диспетчеризация PollResultHandler по PollType, ElectionResultHandlerAdapter (назначение губернатора), событие PollClosedEvent, DoD-тест PollClosedEventIntegrationTest зелёный)
+2026-09-02 (Настройки района перенесены в пер-районные БД-настройки + админская панель «Настройки района» на UI: группы «Выборы губернатора» и «Обжалование»; длительность/окно «живого»/кворум/число слотов выборов больше не захардкожены в коде)
 
 ## Сводка прогресса
 
@@ -29,7 +29,7 @@
 | №1. Первый вход в дефолтный район | ✅ Реализован |
 | №1.1. Создание персонажа | ✅ Реализован |
 | №1.2. Удаление персонажа из района | ❌ Не реализован |
-| №2. Первые выборы | ✅ Реализован (backend) |
+| №2. Первые выборы | ✅ Реализован (backend + frontend) |
 
 ### Технические задачи
 
@@ -84,3 +84,24 @@
 | ElectionResultHandler удалён | ✅ Выполнено |
 | PollClosedEventIntegrationTest (DoD Этапа 6, сквозной путь: closeElection → dispatcher → adapter → LocationPost → ElectionClosedEvent → Notification; PollClosedEventCaptor перехватывает событие) | ✅ Выполнено |
 | Полный mvn test — 13/13 зелёные | ✅ Выполнено |
+| ElectionStartedEvent (type=ELECTION_STARTED) в core.event + регистрация в @JsonSubTypes DomainEvent; публикация из ElectionFacade.initiateElection | ✅ Выполнено |
+| NotificationEventListener.onElectionStarted — рассылка «выборы начались» жителям района + WS-пуш (notificationType=ELECTION_STARTED) | ✅ Выполнено |
+| Гейт «нет губернатора» (LocationPost GOVERNOR в мэрии) + запрет параллельных выборов — проверка в PollService.createGovernorElection, 400 с текстом | ✅ Выполнено |
+| NotificationController (REST /api/notifications): история, unread-count, read/accept/decline | ✅ Выполнено |
+| LocationPostController/by-location → LocationPostView с именем персонажа (для модалки мэрии) | ✅ Выполнено |
+| ElectionController переведён на внутренний ChatUser.id (единый characterId с ElectionResultHandlerAdapter) | ✅ Выполнено |
+| GET /api/elections/district/{districtId}/overview → DistrictElectionView (поллинг для мини-таблицы) | ✅ Выполнено |
+| Frontend: chat-area «⚡ Действия» → выдвижение кандидатуры (ConfirmModal) на Площади Ленина/Площадь | ✅ Выполнено |
+| Frontend: мини-таблица выборов shared/components/election-table (слоты, таймер, голосование, результат) | ✅ Выполнено |
+| Frontend: модалка уведомлений — история REST + live WS, типы ELECTION_STARTED/ELECTION_RESULT/APPLICATION_RESULT | ✅ Выполнено |
+| Frontend: модалка района «Мэрия» — реальные губернатор/мэр/депутаты из LocationPost | ✅ Выполнено |
+| DistrictSettings entity + DistrictSettingsService + DistrictSettingsController (GET/PUT /api/districts/{id}/settings) — пер-районные настройки | ✅ Выполнено |
+| Магия выборов убрана: длительность, окно «живого», кворум, число слотов берутся из настроек района (PollService, ElectionFacade) | ✅ Выполнено |
+| Frontend: админская панель «Настройки района» (nav-rail → DistrictSettingsModal) с группами «Выборы губернатора» и «Обжалование» | ✅ Выполнено |
+| ElectionResultHandlerAdapter назначает победителя ТОЛЬКО на GOVERNOR (мэрия); убран баг «победитель получал POLICE_OFFICER/BANK_DIRECTOR/REAL_ESTATE_DIRECTOR» | ✅ Выполнено |
+| DistrictSettingsController ограничен ролями ADMIN/MODERATOR (403 иначе); вкладка «Настройки района» в nav-rail скрыта для остальных | ✅ Выполнено |
+| Аккаунт username=joks автоматически получает роль ADMIN (при создании персонажа) | ✅ Выполнено |
+| ChatUserController: список персонажей района + смена роли (только ADMIN, свою роль менять нельзя) | ✅ Выполнено |
+| Frontend: shared DistrictUsersTable (поиск по персонажу/аккаунту, дропдаун роли, сохранение) + вкладка «Персонажи района» в DistrictSettingsModal для ADMIN | ✅ Выполнено |
+| DistrictUsersTable стала универсальной: редактирование полей chat_users (роль, профессия, статус, монеты, энергия, рейтинг); роль можно менять, кроме «последнего админа района» | ✅ Выполнено |
+| MessageService + <app-toast/>: всплывающие уведомления в правом верхнем углу («Успешно сохранено»/«Ошибка сохранения») | ✅ Выполнено |
