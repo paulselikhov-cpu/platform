@@ -43,8 +43,12 @@ cd babich-app && npm run start
 ## Инфраструктура (Docker)
 
 ```bash
-# Запуск всех контейнеров (nginx, БД, Redis и т.д.)
+# Запуск всех контейнеров (nginx, PostgreSQL, Redis)
 docker-compose up -d
+
+# Запуск только Redis (используется начиная с этапа R3, см.
+# documentation/architecture/realtime/scale-targets-and-redis.md)
+docker-compose up -d redis
 
 # Остановка
 docker-compose down

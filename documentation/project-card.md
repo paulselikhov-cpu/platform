@@ -30,6 +30,7 @@
 | Синхронизация LocationUsersMenu | [`architecture/presence/location-users-menu-sync.md`](architecture/presence/location-users-menu-sync.md) |
 | Presence-архитектура | [`architecture/presence/online-tracking.md`](architecture/presence/online-tracking.md) |
 | Ранняя подписка на WS-топики | [`architecture/websocket/early-topic-subscription.md`](architecture/websocket/early-topic-subscription.md) |
+| Целевой масштаб 100k+ онлайн и Redis как realtime-хранилище (presence, счётчики); STOMP-брокер — RabbitMQ/Artemis | [`architecture/realtime/scale-targets-and-redis.md`](architecture/realtime/scale-targets-and-redis.md) |
 | Stomp/Chat сервисы | [`architecture/websocket/stomp-and-chat-service.md`](architecture/websocket/stomp-and-chat-service.md) |
 | Районы и системные локации | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
 | Должности в системных локациях (LocationPost) | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |

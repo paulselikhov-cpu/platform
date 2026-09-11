@@ -116,6 +116,10 @@ Angular). Базовые сущности вроде пользователя, �
   добавить отдельной итерацией — заложи в модели поле `energyRegenSource`
   (`PASSIVE`/`SLEEP`/`FOOD`), чтобы потом не переделывать таблицу.
 - Кулдауны и текущая энергия — в Redis (TTL), не в клиентском времени.
+  Целевая роль Redis шире TTL: это realtime-хранилище проекта (presence, счётчики,
+  кулдауны/квоты) при целевом онлайне 100k+; внешний STOMP-брокер для fan-out —
+  RabbitMQ/Artemis через StompBrokerRelay. См.
+  [`architecture/realtime/scale-targets-and-redis.md`](../architecture/realtime/scale-targets-and-redis.md).
 
 ### 2.4 Заявки (`Application`)
 Даже для MVP заведи заявки как отдельную сущность с полем `type` (enum,

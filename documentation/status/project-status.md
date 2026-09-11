@@ -1,6 +1,7 @@
 # Статус проекта BabichChat
 
 ## Последнее обновление
+2026-09-11 (Зафиксирован целевой масштаб: онлайн 100k+ (Telegram-уровень), десктоп + будущая мобилька. Принято решение: путь к 100k+ — внешний STOMP-брокер (RabbitMQ/Artemis через StompBrokerRelay) + presence/unread в Redis, а НЕ ранний переход на WebFlux. Новая заметка architecture/realtime/scale-targets-and-redis.md; контейнер redis добавлен в docker-compose — этап R1)
 2026-09-02 (Настройки района перенесены в пер-районные БД-настройки + админская панель «Настройки района» на UI: группы «Выборы губернатора» и «Обжалование»; длительность/окно «живого»/кворум/число слотов выборов больше не захардкожены в коде)
 
 ## Сводка прогресса
@@ -105,3 +106,8 @@
 | Frontend: shared DistrictUsersTable (поиск по персонажу/аккаунту, дропдаун роли, сохранение) + вкладка «Персонажи района» в DistrictSettingsModal для ADMIN | ✅ Выполнено |
 | DistrictUsersTable стала универсальной: редактирование полей chat_users (роль, профессия, статус, монеты, энергия, рейтинг); роль можно менять, кроме «последнего админа района» | ✅ Выполнено |
 | MessageService + <app-toast/>: всплывающие уведомления в правом верхнем углу («Успешно сохранено»/«Ошибка сохранения») | ✅ Выполнено |
+| Зафиксирован целевой масштаб 100k+ онлайн; путь — внешний STOMP-брокер (RabbitMQ/Artemis через StompBrokerRelay) + presence/unread в Redis, WebFlux — опциональный поздний этап (заметка architecture/realtime/scale-targets-and-redis.md, этапы R1–R5) | ✅ Зафиксировано |
+| R1: контейнер redis в docker-compose.yml | ✅ Выполнено |
+| R2: STOMP Broker Relay (RabbitMQ/Artemis) вместо SimpleBroker | ❌ Не начат |
+| R3: Presence/online-счётчики/unread → Redis | ❌ Не начат |
+| R4: прод-конфиг (show-sql, ddl-auto → миграции, пул HikariCP, индексы) | ❌ Не начат |
