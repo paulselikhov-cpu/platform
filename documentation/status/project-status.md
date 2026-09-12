@@ -1,6 +1,7 @@
 # Статус проекта BabichChat
 
 ## Последнее обновление
+2026-09-12 (Паспорт: заявка REGISTER_PASSPORT подаётся из приёмной (PENDING), сотрудник мэрии видит её в «Гражданских заявках» и одобряет/отклоняет. Одобрение через POST /api/applications/{id}/approve (только ADMIN/MODERATOR) запускает RegisterPassport — генерация passportId PP-XXXX-XXXX, запись chat_user.passport_id и статус RESIDENT. Отклонение через POST /api/applications/{id}/reject. Фронтенд: reception-menu подаёт заявку (тост), CivilApplicationsModal — реальные approve/reject API c обновлением списка)
 2026-09-11 (Зафиксирован целевой масштаб: онлайн 100k+ (Telegram-уровень), десктоп + будущая мобилька. Принято решение: путь к 100k+ — внешний STOMP-брокер (RabbitMQ/Artemis через StompBrokerRelay) + presence/unread в Redis, а НЕ ранний переход на WebFlux. Новая заметка architecture/realtime/scale-targets-and-redis.md; контейнер redis добавлен в docker-compose — этап R1)
 2026-09-02 (Настройки района перенесены в пер-районные БД-настройки + админская панель «Настройки района» на UI: группы «Выборы губернатора» и «Обжалование»; длительность/окно «живого»/кворум/число слотов выборов больше не захардкожены в коде)
 
@@ -111,3 +112,8 @@
 | R2: STOMP Broker Relay (RabbitMQ/Artemis) вместо SimpleBroker | ❌ Не начат |
 | R3: Presence/online-счётчики/unread → Redis | ❌ Не начат |
 | R4: прод-конфиг (show-sql, ddl-auto → миграции, пул HikariCP, индексы) | ❌ Не начат |
+| RoomFeature: вынесение спец-логики комнат (Ленин/губернатор/приёмная) из ядра chat-area в фичи; shared ActionsMenu с ConfirmModal; фабрика resolveRoomFeature | ✅ Выполнено (architecture/chat/room-feature.md) |
+| Оранжевый warning-тост (MessageService.warning + .toast--warning) для «Вы уже авторизованы как мэр» | ✅ Выполнено |
+| Backend: /api/location-posts/appoint закрыт ролью ADMIN (403 иначе), идемпотентное назначение, бизнес-400 вместо 500; GlobalExceptionHandler (@RestControllerAdvice: RuntimeException→400, DataIntegrityViolation→409, неверный параметр→400) | ✅ Выполнено |
+| Приёмная: «Гражданские заявки» (сотрудник мэрии) — модалка со списком заявок, фильтр по типу (вкл. REGISTER_PASSPORT), кнопки Одобрить(зелёная)/Отклонить(синяя) пока только toast; backend GET /api/applications/all с именем заявителя (ApplicationView) | ✅ Выполнено |
+| Паспорт: заявка REGISTER_PASSPORT → PENDING → «Одобрить» (POST /api/applications/{id}/approve, только ADMIN/MODERATOR) → RegisterPassport генерация passportId PP-XXXX-XXXX, chat_user.passport_id, статус RESIDENT; «Отклонить» (POST /api/applications/{id}/reject) → REJECTED с причиной; фронтенд: reception-menu подаёт заявку (toast), CivilApplicationsModal — реальные approve/reject API с обновлением списка; бэкенд REST /api/applications/register-passport (GET список для модерации) | ✅ Выполнено |
