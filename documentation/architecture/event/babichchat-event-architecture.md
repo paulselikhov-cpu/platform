@@ -252,7 +252,7 @@ flowchart TB
     CRON --> Q2[Проверить Deposit с истёкшим maturesAt]
     CRON --> Q3[Проверить MarketStall с истёкшей арендой]
     CRON --> Q4[Проверить Campaign с истёкшим endsAt]
-    CRON --> Q5[Пересчитать дневные квоты энергии civicRole в полночь]
+    CRON --> Q5[Пересчитать дневные квоты энергии civic_role в полночь]
 
     Q1 --> H1[PollResultHandler] --> BUS{{EventBus}}
     Q2 --> H2[BankInterestService] --> BUS
@@ -335,7 +335,7 @@ flowchart TB
     end
     subgraph economy[economy: RewardService, CoinBalance, TransactionLog, Energy]
     end
-    subgraph roles[roles: Profession, BusinessRole, AppointedRole, CivicRole]
+    subgraph roles[roles: Profession, chatUser.civic_role = BUSINESSMAN, chatUser.civic_role= DIRECTOR, civic_role]
     end
     subgraph gangs[gangs: Gang, GangMember, TheftAttempt, EscortSession]
     end

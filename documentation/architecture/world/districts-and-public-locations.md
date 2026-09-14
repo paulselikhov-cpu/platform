@@ -60,7 +60,7 @@
 
 1. **CITY_HALL** — Мэрия (управление районом)
 2. **LENIN_SQUARE** — Площадь Ленина (народные голосования, комната "Тёплые трубы" для бомжей)
-3. **POLICE_STATION** — Полицейский участок (база civicRole)
+3. **POLICE_STATION** — Полицейский участок (база civic_role)
 4. **PRISON** — Тюрьма (место содержания нарушителей)
 5. **BANK** — Банк (вклады, ипотека)
 6. **WAREHOUSE** — Склад (закупка товаров для бизнеса)
@@ -71,13 +71,13 @@
 
 | Должность | Локация | Тип | Слотов | Описание |
 |-----------|---------|-----|--------|----------|
-| GOVERNOR | CITY_HALL | appointedRole | 1 | Глава администрации района (назначается/избирается) |
-| MAYOR | CITY_HALL | appointedRole | N | Мэр (назначается) |
-| DEPUTY | CITY_HALL | appointedRole | N | Депутат (назначается) |
-| POLICE_OFFICER | POLICE_STATION | civicRole | N | Полицейский (фиксированное число слотов на район) |
-| BANK_DIRECTOR | BANK | appointedRole | 1 | Директор банка |
-| BANK_EMPLOYEE | BANK | appointedRole | N | Сотрудник банка |
-| REAL_ESTATE_DIRECTOR | REAL_ESTATE_MARKET | appointedRole | 1 | Владелец рынка недвижимости |
+| GOVERNOR | CITY_HALL | chatUser.civic_role= DIRECTOR | 1 | Глава администрации района (назначается/избирается) |
+| MAYOR | CITY_HALL | chatUser.civic_role= DIRECTOR | N | Мэр (назначается) |
+| DEPUTY | CITY_HALL | chatUser.civic_role= DIRECTOR | N | Депутат (назначается) |
+| POLICE_OFFICER | POLICE_STATION | civic_role | N | Полицейский (фиксированное число слотов на район) |
+| BANK_DIRECTOR | BANK | chatUser.civic_role= DIRECTOR | 1 | Директор банка |
+| BANK_EMPLOYEE | BANK | chatUser.civic_role= DIRECTOR | N | Сотрудник банка |
+| REAL_ESTATE_DIRECTOR | REAL_ESTATE_MARKET | chatUser.civic_role= DIRECTOR | 1 | Владелец рынка недвижимости |
 
 ### Авто-членство в системных локациях
 

@@ -60,15 +60,15 @@ Angular). Базовые сущности вроде пользователя, �
    (заявка), чтобы в будущем заменить автоодобрение на реальное голосование без
    переделки модели).
 4. Две группировки: **Воры** и **Проститутки** (см. раздел 3).
-5. Одна гражданская структура: **Полицейский участок** (`civicRole`, упрощённая
+5. Одна гражданская структура: **Полицейский участок** (`civic_role`, упрощённая
    версия — см. раздел 4.1).
-6. Один appointedRole-сервис: **Банк** (упрощённая версия — см. раздел 4.2).
+6. Один chatUser.civic_role= DIRECTOR-сервис: **Банк** (упрощённая версия — см. раздел 4.2).
 7. **Рынок (общий)** — аренда прилавков без мэрии (см. раздел 4.3).
 
 ### Закладываем архитектурно, но НЕ реализуем логику сейчас
 - **Рынок недвижимости** — завести сущность-заглушку (например, таблицу `Listing`
   с полями locationId, sellerId, price, status), но бизнес-логику купли-продажи,
-  комиссию appointedRole-владельца рынка и т.д. не писать. Это отдельный будущий
+  комиссию chatUser.civic_role= DIRECTOR-владельца рынка и т.д. не писать. Это отдельный будущий
   модуль.
 - Полноценная мэрия с Парламентом, «Площадью Ленина», голосованиями, каскадным
   распределением энергии между структурами — архитектурно предусмотрена (см. раздел
@@ -144,7 +144,7 @@ Angular). Базовые сущности вроде пользователя, �
   `JOIN_GANG`.
 - У обеих группировок в статусе жителя (публичном профиле) отображается **фейковая
   профессия** — например «дворник» или «швея» — вместо реальной механики; реальный
-  заработок идёт через `gangRole`, не через `profession`.
+  заработок идёт через `chatUser.gang_role`, не через `profession`.
 
 ### 3.2 Группировка «Воры» (эталонный пример для симметрии)
 
@@ -224,7 +224,7 @@ price, xpAwarded, gangCut, personalCut, timestamp, locationId) — по анал
 «pashaSelikhov» из базовой концепции), чтобы было видно, как это работает от
 кнопки до записи в базе.
 
-### 4.1 Полицейский участок (`civicRole`, упрощённая версия)
+### 4.1 Полицейский участок (`civic_role`, упрощённая версия)
 
 **Роль:** `POLICE_OFFICER` — назначается вручную (для MVP: администратором
 платформы/через упрощённую заявку без полноценного голосования мэрии). Слотов на
@@ -255,11 +255,11 @@ price, xpAwarded, gangCut, personalCut, timestamp, locationId) — по анал
    POLICE_GANG_CATCH`) + запись в публичную полицейскую базу
    (`PoliceRecord: userId, gangType, catchDate, officerId`).
 5. Если совпадения нет — штраф самому Иванову: понижение его `XpGang`-аналога для
-   civicRole (условно «звание» полицейского) или временная блокировка действия
+   civic_role (условно «звание» полицейского) или временная блокировка действия
    «Проверить на связь» на сутки (реализуй как самое простое наказание для MVP —
    например, откат потраченной энергии не даём, плюс кулдаун-штраф).
 
-### 4.2 Банк (`appointedRole`, упрощённая версия)
+### 4.2 Банк (`chatUser.civic_role= DIRECTOR`, упрощённая версия)
 
 **Роль:** `BANK_DIRECTOR` — один слот на район, назначается (для MVP — вручную
 администратором/автозаявкой). Без директора банк не принимает новые вклады
@@ -287,13 +287,13 @@ price, xpAwarded, gangCut, personalCut, timestamp, locationId) — по анал
 
 ### 4.3 Рынок (общий, аренда прилавков — единственный бизнес без мэрии)
 
-**Роль:** `businessRole` типа `MARKET_STALL_OWNER` — выдаётся сразу при аренде,
+**Роль:** `chatUser.civic_role = BUSINESSMAN` типа `MARKET_STALL_OWNER` — выдаётся сразу при аренде,
 без заявки в мэрию (в отличие от «настоящего» бизнеса).
 
 **Сценарий:**
 1. Житель Кузнецова арендует прилавок за 50 монет на сутки (`MarketStall`:
    id, ownerId, rentedUntil).
-2. Кузнецова становится `businessRole` (MARKET_STALL_OWNER) и получает доступ к
+2. Кузнецова становится `chatUser.civic_role = BUSINESSMAN` (MARKET_STALL_OWNER) и получает доступ к
    личному мини-складу прилавка (`StallInventory`: stallId, itemId, quantity,
    pricePerUnit).
 3. Кузнецова закупает товар на системном складе (или вручную заводит позиции для
@@ -305,7 +305,7 @@ price, xpAwarded, gangCut, personalCut, timestamp, locationId) — по анал
 5. Кузнецова заходит и «снимает кассу» — деньги переводятся на личный баланс
    (`RewardService`, `reason: MARKET_SALE`).
 6. По истечении срока аренды (`rentedUntil`), если не продлить — прилавок
-   закрывается, `businessRole` снимается, остаток товара «сгорает» или
+   закрывается, `chatUser.civic_role = BUSINESSMAN` снимается, остаток товара «сгорает» или
    возвращается в личный инвентарь (реши по вкусу, не критично для MVP).
 
 **Анти-АФК:** фоновая задача проверяет истёкшую аренду и деактивирует прилавки.
@@ -314,7 +314,7 @@ price, xpAwarded, gangCut, personalCut, timestamp, locationId) — по анал
 
 Заведи `RealEstateListing` (id, locationId, sellerId, price, status: `DRAFT` —
 и больше ничего). Не подключай никакой бизнес-логики купли-продажи, комиссии
-`appointedRole`-владельца рынка и т.п. — это осознанно отложено на следующую
+`chatUser.civic_role= DIRECTOR`-владельца рынка и т.п. — это осознанно отложено на следующую
 итерацию после того, как MVP-цикл заработает.
 
 ---
@@ -325,10 +325,10 @@ price, xpAwarded, gangCut, personalCut, timestamp, locationId) — по анал
 почти пустые) — это тот же принцип, что и в базовой концепции:
 
 - `Profession` (пока только `DVORNIK`)
-- `BusinessRole` (пока только `MARKET_STALL_OWNER`)
-- `AppointedRole` (пока только `BANK_DIRECTOR`)
-- `CivicRole` (пока только `POLICE_OFFICER`)
-- `GangRole` (у каждого `GangMember` — привязка к `GangHierarchyPost`)
+- `chatUser.civic_role = BUSINESSMAN` (пока только `MARKET_STALL_OWNER`)
+- `chatUser.civic_role= DIRECTOR` (пока только `BANK_DIRECTOR`)
+- `civic_role` (пока только `POLICE_OFFICER`)
+- `chatUser.gang_role` (у каждого `GangMember` — привязка к `GangHierarchyPost`)
 - `SystemRole` (admin/moderator — обычный RBAC, не связан с игровой логикой)
 
 Не объединяй их в одну таблицу «roles» с полем type — это тот момент, который
@@ -348,10 +348,10 @@ price, xpAwarded, gangCut, personalCut, timestamp, locationId) — по анал
    группировок.
 5. Группировка «Воры»: `TheftAttempt`, механика «пойти на дело».
 6. Группировка «Проститутки»: `EscortSession`, механика платной встречи.
-7. `CivicRole` = полицейский участок: штраф/протокол/проверка на группировку,
+7. `civic_role` = полицейский участок: штраф/протокол/проверка на группировку,
    `PoliceRecord`.
-8. `AppointedRole` = банк: `Deposit`, начисление процентов шедулером.
-9. `BusinessRole` = рынок: `MarketStall`, `StallInventory`, `StallCashbox`.
+8. `chatUser.civic_role= DIRECTOR` = банк: `Deposit`, начисление процентов шедулером.
+9. `chatUser.civic_role = BUSINESSMAN` = рынок: `MarketStall`, `StallInventory`, `StallCashbox`.
 10. Заглушка `RealEstateListing` — только сущность, без бизнес-логики.
 
 После шага 9 цикл уже полностью замкнут и проходим: житель может зайти в игру,
@@ -407,16 +407,16 @@ price, xpAwarded, gangCut, personalCut, timestamp, locationId) — по анал
   персонажу в целом. См. раздел 10.
 - **RoleGrant** — обобщённая запись «персонаж X имеет роль Y на скоупе Z». Не
   единая таблица, а **индекс-описание** (см. примечание ниже). Реальный носитель
-  роли — одна из пяти специализированных таблиц (Profession, BusinessRole,
-  AppointedRole, CivicRole, GangRole), а RoleGrant — это view/агрегат для
+  роли — одна из пяти специализированных таблиц (Profession, chatUser.civic_role = BUSINESSMAN,
+  chatUser.civic_role= DIRECTOR, civic_role, chatUser.gang_role), а RoleGrant — это view/агрегат для
   проверки прав «есть ли у персонажа роль типа POLICE_OFFICER в районе N».
 
 **Примечание про RoleGrant:** В концепции (раздел 2) описаны пять независимых
-слоёв ролей, и это принципиальное решение: `profession`, `businessRole`,
-`appointedRole`, `civicRole`, `gangRole` — отдельные таблицы/сервисы, а не одна
+слоёв ролей, и это принципиальное решение: `profession`, `chatUser.civic_role = BUSINESSMAN`,
+`chatUser.civic_role= DIRECTOR`, `civic_role`, `chatUser.gang_role` — отдельные таблицы/сервисы, а не одна
 таблица `roles` с полем type. RoleGrant как единая таблица не создаётся; вместо
 него используется `LocationPost` (уже реализован) для должностей в системных
-локациях и, в будущем, отдельные записи в `GangMember`/`BusinessRole` для
+локациях и, в будущем, отдельные записи в `GangMember`/`chatUser.civic_role = BUSINESSMAN` для
 остальных типов ролей. Термин «RoleGrant» в схеме — это **логическая концепция**
 («персонаж имеет роль»), а не физическая таблица.
 
@@ -673,7 +673,7 @@ class Appointment {
 | CoinBalance, TransactionLog, RewardService | 2 | ✅ Реализовано |
 | XpUser, Energy | 2 | ✅ Реализовано |
 | Gang, GangMember, GangHierarchyPost, GangLocation | 1 | ❌ Не реализовано |
-| BusinessRole, AppointedRole, CivicRole | 1 | ❌ Не реализовано |
+| chatUser.civic_role = BUSINESSMAN, chatUser.civic_role= DIRECTOR, civic_role | 1 | ❌ Не реализовано |
 | Charter (Устав района) | 2 | ❌ Заглушка |
 | Quota (квоты энергии/бюджета) | 2 | ❌ Не реализовано |
 | Inventory (StallInventory, личный инвентарь) | 2 | ❌ Частично (только StallInventory) |
@@ -728,8 +728,8 @@ class Appointment {
   более высокого уровня.
 - Вес голоса в `Poll` — `WeightStrategy.XP_USER_LEVEL` использует уровень
   (а не сырой XP) для расчёта веса голоса (раздел 3.1 концепции).
-- Минимальный уровень для получения `LocationPost`, `AppointedRole`,
-  `CivicRole` — задаётся Уставом района (Charter) или конфигом должности.
+- Минимальный уровень для получения `LocationPost`, `chatUser.civic_role= DIRECTOR`,
+  `civic_role` — задаётся Уставом района (Charter) или конфигом должности.
 
 **Таблица порогов (LevelThreshold):**
 
@@ -776,14 +776,14 @@ class PostRank {
   персонажа, либо нет; внутренней прогрессии в концепции не описано.
 - Назначаемые должности (`BANK_DIRECTOR`, `REAL_ESTATE_DIRECTOR`) —
   аналогично, без прогрессии в концепции.
-- Роли группировок (`GangRole`) — для них уже есть отдельный аналог
+- Роли группировок (`chatUser.gang_role`) — для них уже есть отдельный аналог
   (`XP-GANG`, раздел 3.1 концепции), который играет роль «ранга в
   группировке».
 
 **Как расширять:**
 Если в будущем у какой-то другой должности появляется описанная в концепции
 прогрессия/наказание — достаточно создать `PostRank` для соответствующего
-`LocationPost`, без правки схемы или добавления новых полей в `CivicRole`.
+`LocationPost`, без правки схемы или добавления новых полей в `civic_role`.
 Механизм уже общий и переиспользуемый.
 
 ### 10.3 Связь PersonLevel и PostRank
