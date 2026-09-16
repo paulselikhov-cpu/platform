@@ -70,7 +70,7 @@ this.somethingHappened.emit({ id, amount });
 
 ### 3.2. `EventType` — реестр всех событий (`core/event/EventType.java`)
 Просто enum-список: `POLL_CLOSED`, `ELECTION_CLOSED`, `COINS_CHANGED`,
-`XP_CHANGED`, `APPLICATION_RESOLVED`, `NOTIFICATION_SENT`, `CAMPAIGN_FINISHED`,
+`XP_CHANGED`, `APPLICATION_RESOLVED`, `NOTIFICATION_SENT`,
 `POLL_CREATED`. Новое событие начинается с добавления значения сюда.
 
 ### 3.3. `ScopeType` — «где случилось» (`core/event/ScopeType.java`)

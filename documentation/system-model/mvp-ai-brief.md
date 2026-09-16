@@ -381,7 +381,7 @@ price, xpAwarded, gangCut, personalCut, timestamp, locationId) — по анал
 │  Notification, Scheduler, PollResultHandler      │
 ├──────────────────────────────────────────────────┤
 │  Слой 3: Процессы                                │
-│  Application, Poll, Campaign, Appointment        │
+│  Application, Poll        │
 ├──────────────────────────────────────────────────┤
 │  Слой 2: Правила и ресурсы                       │
 │  Charter, Ledger, Quota, Inventory               │
@@ -523,55 +523,8 @@ class PollVote {
    `Poll(scopeType=DISTRICT, weightStrategy=XP_USER_LEVEL, parentPollId=...)`
 3. Второй Poll при закрытии → handler вносит поправку в Charter
 
-#### 7.3.3 Campaign (Кампания)
-
-Коллективное мероприятие с окном времени и порогом участия, **без голосования**.
-Результат — достигнут порог совокупного вклада (сумма действий/монет) или нет.
-
-```java
-class Campaign {
-  Long id;
-  ScopeType scopeType;
-  Long scopeId;
-  CampaignType campaignType;  // CLEANUP, FUNDRAISING, GANG_RAID, EVENT
-  Instant startsAt;
-  Instant endsAt;
-  long goalThreshold;        // порог, который нужно набрать
-  long currentProgress;      // денормализовано или агрегируется из Contribution
-  CampaignStatus status;     // ACTIVE, SUCCEEDED, FAILED
-}
-
-class CampaignContribution {
-  Long id;
-  Long campaignId;
-  Long characterId;
-  long amount;               // сколько внёс (монет/действий)
-  Instant timestamp;
-}
 ```
 
-**Примеры:** субботник на площади (сбор действий «убрать мусор»), краудфандинг
-ремонта мэрии (сбор монет), недельный рейд группировки (коллективный прогресс).
-
-**Отличие от Poll:** Poll — про **выбор варианта** голосами; Campaign — про
-**суммарный вклад** без голосования. Не заменяет, а дополняет.
-
-#### 7.3.4 Appointment (Запись на приём)
-
-Процесс бронирования временного слота для взаимодействия с ролью (например, запись
-к врачу, в банк, к госслужащему). **В MVP не реализуется**, заложена архитектурно
-как четвёртый примитив Слоя 3. См. раздел 10 (сущности для расширения).
-
-```java
-class Appointment {
-  Long id;
-  Long locationId;           // где происходит приём
-  Long providerId;           // characterId того, кто принимает
-  Long clientId;             // characterId клиента
-  AppointmentSlot slot;      // дата/время/длительность
-  AppointmentStatus status;  // BOOKED, COMPLETED, CANCELLED, NO_SHOW
-}
-```
 
 ### 7.4 Слой 4 — Доставка и автоматизация
 
@@ -604,7 +557,6 @@ class Appointment {
     создании выборов; ручное закрытие гасит её через `cancelPending`)
   - Очистка протухших presence-сессий → `PresenceService.onTick()`
     (`TickHandler`, intervalMillis=15_000)
-  - Закрытие Campaign по истечении `endsAt` → проверка порога, награды
   - Начисление процентов по вкладам (банк, существующий `Deposit`)
   - Проверка истёкшей аренды прилавков (рынок)
   - «Живой участник» — обновление статуса активности (для сценария №2, порог 70%
@@ -696,12 +648,8 @@ class Appointment {
 | Quota (квоты энергии/бюджета) | 2 | ❌ Не реализовано |
 | Inventory (StallInventory, личный инвентарь) | 2 | ❌ Частично (только StallInventory) |
 | Application (заявки) | 3 | ✅ Реализовано (базовая сущность) |
-| Poll (голосование) | 3 | ❌ Не реализовано |
-| Campaign (кампания) | 3 | ❌ Не реализовано |
-| Appointment (запись на приём) | 3 | ❌ Не реализовано |
 | Notification (уведомления) | 4 | ✅ Реализовано (entity, NotificationContextData, REST + WS-пуш) |
 | Scheduler (шедулер) | 4 | ✅ Реализовано (SchedulerGateway, Этап 5) |
-| PollResultHandler | 4 | ❌ Не реализовано |
 
 ---
 

@@ -235,8 +235,7 @@ flowchart LR
 `PollResultHandler` регистрируется по `PollType` тем же способом, что и
 `ApplicationHandler` — по enum-ключу через `Map<PollType, PollResultHandler>`,
 собираемый Spring'ом. Один интерфейс, один паттерн диспетчеризации на все
-типы процессов Слоя 3 (`Application`, `Poll`, в будущем `Campaign`,
-`Appointment`) — не изобретайте для каждого свой способ маршрутизации.
+типы процессов Слоя 3 (`Application`, `Poll`)
 
 ---
 
@@ -251,13 +250,11 @@ flowchart TB
     CRON["@Scheduled(fixedRate) TickService"] --> Q1[Проверить Poll с истёкшим endsAt]
     CRON --> Q2[Проверить Deposit с истёкшим maturesAt]
     CRON --> Q3[Проверить MarketStall с истёкшей арендой]
-    CRON --> Q4[Проверить Campaign с истёкшим endsAt]
     CRON --> Q5[Пересчитать дневные квоты энергии civic_role в полночь]
 
     Q1 --> H1[PollResultHandler] --> BUS{{EventBus}}
     Q2 --> H2[BankInterestService] --> BUS
     Q3 --> H3[MarketStallService] --> BUS
-    Q4 --> H4[CampaignResultHandler] --> BUS
     Q5 --> H5[QuotaResetService] --> BUS
 
     BUS --> NOT[NotificationService]

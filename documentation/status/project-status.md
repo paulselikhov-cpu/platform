@@ -52,7 +52,6 @@
 | Актуализация документации (districts-and-public-locations.md) | ✅ Выполнено |
 | Четырёхслойная архитектура: Entity → Facade → Service → Handler | ✅ Выполнено (election) |
 | ElectionScheduler — @Scheduled(fixedRate=60s) | ✅ Выполнено |
-| Campaign + CampaignContribution entity/service | ✅ Выполнено |
 | Notification + NotificationService (рассылка по району) | ✅ Выполнено |
 | PersonLevel (гейт уровня 3 для старта выборов) | ✅ Выполнено |
 | PollVoteRepository — countVotesPerCandidate, sumVoteWeightByPollId | ✅ Выполнено |
