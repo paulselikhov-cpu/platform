@@ -180,8 +180,8 @@ documentation/
 - Для остановки: `kill <PID>` (через git bash) или `taskkill //PID <PID>`.
 - Исключение: если пользователь явно попросил оставить сервер запущенным.
 
-## Если пользователь пишет - задача для ui, то пункты forBack: не читаем
-## Если пользователь пишет - задача для бэка, то пункты forUI: не читаем
+## Если пользователь пишет про задачу для frontend, то пункты forBack: не читаем
+## Если пользователь пишет про задачу для backend, то пункты forUI: не читаем
 
 ## Shell: git bash, без cmd /c
 
@@ -242,6 +242,28 @@ documentation/
   }
   ```
 - Модификаторы/псевдоклассы (`&--active`, `&:hover`) тоже через `&`.
+
+## forUI: SCSS: цвета — только через design-tokens
+
+- В стилях компонентов не хардкодить цвета (`#hex`, `rgba(...)`) — брать
+  токен из `platform-ui/projects/babich-chat-ui/src/app/tokens/design-tokens.scss`
+  через `var(...)`:
+  ```scss
+  .some-btn {
+      color: var(--color-danger);
+      background: var(--color-danger-muted);
+      border-color: var(--color-danger);
+  }
+  ```
+- Нужного токена нет — **добавить его** в `design-tokens.scss` во **все темы**
+  (`dark`, `light`, `cold-retro`, `amber-retro`, `retro`), а не писать hex
+  на месте компонента. Хардкод цвета допустим только внутри самого
+  `design-tokens.scss`.
+- Семантика: `--color-success` / `--color-danger` — цвет текста и рамки;
+  `--color-success-muted` / `--color-danger-muted` — мягкая заливка
+  (кнопки, бейджи) поверх тёмных панелей.
+- Встретил `var(--color-x, #hex)` — значит токена нет: завести токен и
+  убрать fallback.
 
 ## forUI: шаблон — в отдельном `.html`, не в `template:` внутри `.ts`
 

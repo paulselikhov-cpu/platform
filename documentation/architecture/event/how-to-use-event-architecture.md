@@ -134,7 +134,8 @@ eventPublisher.publish(new SomeEvent(...));
 - `ElectionClosedEvent` — «выборы закрыты, вот победитель»; подписчик
   `NotificationEventListener` шлёт уведомления жителям + WS-пуш.
 - `ApplicationResolvedEvent` — «гражданская заявка решена (APPROVED/REJECTED)»;
-  тот же подписчик уведомляет заявителя.
+  тот же подписчик уведомляет заявителя (адресно по `characterId`, в
+  `Notification.data` кладёт applicationType/applicationStatus).
 - `PollClosedEvent` — «голосование закрыто и обработано» (общее для всех типов голосования).
 
 ### 3.7. `PollResultHandler` + `PollResultDispatcher` — «последствия голосования»
@@ -280,11 +281,17 @@ public void giveCoins(Long userId, long amount, RewardReason reason, Long relate
    Почему не синхронно в RewardService? Чтобы RewardService не знал про
    TransactionLog и любое новое последствие добавлялось подписчиком.
 
-### Пример Б. Заявка: «решена» → уведомление заявителя
-1. `ApplicationService` после `handler.handle()` + save публикует `ApplicationResolvedEvent`.
-2. `NotificationEventListener.onApplicationResolved` ловит его.
-3. Находит всех персонажей пользователя, сохраняет `Notification`, шлёт WS-пуш
-   в `/user/{username}/queue/notifications`.
+### Пример Б. Заявка: «решена» → уведомление заявителя + обновление профиля
+1. `ApplicationService` после `handler.handle()` + save публикует
+   `ApplicationResolvedEvent` и (для заявок, меняющих ChatUser)
+   `CharacterUpdatedEvent`.
+2. `NotificationEventListener.onApplicationResolved` ловит первый:
+   по `characterId` находит персонажа, сохраняет `Notification`
+   (в `data` — applicationType/applicationStatus) и шлёт WS-пуш в
+   `/user/{username}/queue/notifications`.
+3. `CharacterUpdatedListener` ловит второй: WS-пуш в
+   `/user/queue/character-updated` → фронт перезагружает профиль
+   (`CurrentChatUserService.refresh()`), см. architecture/reactive-character-updates.md.
 
 ### Пример В. Выборы: «закрылись» → назначение + уведомление всем
 1. `ElectionFacade.closeElection` (Слой 2) закрывает голосование через

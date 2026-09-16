@@ -578,10 +578,16 @@ class Appointment {
 Инфраструктурные сервисы, не являющиеся игровыми сущностями, но обеспечивающие
 работу процессов:
 
-- **Notification** — уведомления (колокольчик в шапке приложения). В MVP —
-  простой список текстовых уведомлений с типом и ссылкой на целевой экран.
-  Используется при: старте Poll, закрытии Poll, назначении на должность,
-  открытии Campaign, истечении срока.
+- **Notification** — уведомления (колокольчик в nav-rail). Таблица notifications:
+  recipientCharacterId, title, body, notificationType, relatedEntityId, read,
+  requiresAction/actionStatus и контекстные данные `data` (строка формата
+  `key=value;key2=value2`, утилита `NotificationContextData` с экранированием).
+  Для APPLICATION_RESULT в `data` кладутся `applicationType` и
+  `applicationStatus` — фронтенд по ним решает, какие экраны/данные обновлять.
+  Доставка: REST-история (NotificationController) + live WS-пуш в
+  `/user/{username}/queue/notifications` (DTO `NotificationResponse`, в нём
+  `data` распарсено обратно в Map). Модули events:
+  ELECTION_STARTED, ELECTION_RESULT, APPLICATION_RESULT.
 - **Scheduler** — фоновые задачи. Единая точка входа — `SchedulerGateway`
   (единственный `@Scheduled` в приложении, `fixedDelay = 15_000`), который
   диспетчеризует:
@@ -623,22 +629,34 @@ class Appointment {
   - `DomainEventPublisher` — `@Service`, обёртка над `ApplicationEventPublisher`,
     через которую сервисы публикуют события
   - Конкретные события: `ElectionClosedEvent` (Этап 2), `CoinsChangedEvent`/
-    `XpChangedEvent` (Этап 3), `ApplicationResolvedEvent` (Этап 4)
+    `XpChangedEvent` (Этап 3), `ApplicationResolvedEvent` (Этап 4),
+    `CharacterUpdatedEvent` (см. ниже)
   - Подписчики регистрируются по `EventType` в отдельных `@Service` +
     `@ApplicationModuleListener` (событие доставляется асинхронно на
     TaskExecutor после коммита транзакции публикатора);
     `@TransactionalEventListener` на подписчиках НЕ используется
   - `ApplicationResolvedEvent` — публикуется `ApplicationService` после
-    разрешения заявки (handler.handle() + save); несёт applicationId, userId
-    (ВНЕШНИЙ User.id — поле `Application.userId`, а не внутренний ChatUser.id),
-    status — **строка** (имя enum ApplicationStatus: APPROVED/REJECTED), а не
-    сам enum: событие живёт в `core.event` и не должно зависеть от модуля
-    civic (границы модулей); resultMessage в событие НЕ входит — подписчик
+    разрешения заявки (handler.handle() + save); несёт applicationId,
+    userId (ВНЕШНИЙ User.id — поле `Application.userId`, а не внутренний
+    ChatUser.id), characterId (ВНУТРЕННИЙ ChatUser.id, за которого подана
+    заявка — поле `Application.characterId`; добавлено для адресности:
+    уведомление уходит конкретному персонажу, а не всем персонажам
+    пользователя), applicationType и status — **строки** (имена enum
+    ApplicationType/ApplicationStatus: APPROVED/REJECTED), а не сами enum:
+    событие живёт в `core.event` и не должно зависеть от модуля civic
+    (границы модулей). resultMessage в событие НЕ входит — подписчик
     формирует текст уведомления сам по статусу (это также держит
     сериализованный JSON короче лимита `event_publication.serialized_event`
     varchar(255)); подписчик `NotificationEventListener.onApplicationResolved`
-    находит всех персонажей пользователя через `findAllByUserId` и уведомляет
-    каждого (тип APPLICATION_RESULT, relatedEntityId = applicationId)
+    находит персонажа по `characterId`, сохраняет уведомление
+    (тип APPLICATION_RESULT, relatedEntityId = applicationId) с контекстом
+    `data={applicationType, applicationStatus}` (сериализация
+    NotificationContextData) и шлёт WS-пуш этому персонажу. Фронтенд по
+    `data.applicationType`/`data.applicationStatus` решает, нужно ли
+    перезагружать профиль (паспорт/лицензия обновляют ChatUser, остальные
+    заявки — нет; основной канал обновления профиля — отдельное событие
+    `CharacterUpdatedEvent` → `/user/queue/character-updated`, см.
+    architecture/reactive-character-updates.md).
     
   **Правила использования:**
   - Сервисы Слоя 3 не вызывают сервисы Слоя 4 напрямую — вместо этого публикуют
@@ -681,7 +699,7 @@ class Appointment {
 | Poll (голосование) | 3 | ❌ Не реализовано |
 | Campaign (кампания) | 3 | ❌ Не реализовано |
 | Appointment (запись на приём) | 3 | ❌ Не реализовано |
-| Notification (уведомления) | 4 | ❌ Не реализовано |
+| Notification (уведомления) | 4 | ✅ Реализовано (entity, NotificationContextData, REST + WS-пуш) |
 | Scheduler (шедулер) | 4 | ✅ Реализовано (SchedulerGateway, Этап 5) |
 | PollResultHandler | 4 | ❌ Не реализовано |
 

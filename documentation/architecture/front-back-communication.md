@@ -81,7 +81,7 @@
 
 | Метод фронта | Где вызывается | Ручка на бэке | Что делает |
 |---|---|---|---|
-| `locationMembersService.getLocationUsers(locationId, params)` | `features/location/location-view/location-users-menu/location-users-menu.ts` | `GET /api/location-members/{locationId}/users?page&size&filter&query`, `LocationMembersController.getLocationUsers` | Paged-список участников локации (поиск + фильтр по присутствию). |
+| `locationMembersService.getLocationUsers(locationId, params)` | `features/location/room-view/location-users-menu/location-users-menu.ts` | `GET /api/location-members/{locationId}/users?page&size&filter&query`, `LocationMembersController.getLocationUsers` | Paged-список участников локации (поиск + фильтр по присутствию). |
 | `locationMembersService.getUnreadCounts(locationIds, characterId)` | `features/sidebar/service/unread-tracking-sidebar.service.ts` | `GET /api/location-members/unread-counts?locationIds&characterId`, `LocationMembersController.getUnreadCounts` | Суммарные непрочитанные по локациям (бейджи сайдбара). |
 | `locationMembersService.getUnreadSummary(locationId, characterId)` | `features/sidebar/service/unread-tracking-sidebar.service.ts` (`loadRoomBreakdown`) | `GET /api/location-members/{locationId}/unread?characterId`, `LocationMembersController.getUnreadSummary` | Разбивка непрочитанных по комнатам локации. |
 | `locationMembersService.getOnlineCount(locationId)` | помечен `@not_used` | `GET /api/location-members/{locationId}/online-count`, `LocationMembersController.getOnlineCount` | Число онлайн в локации (не используется, см. WS). |
@@ -108,18 +108,18 @@
 | Метод фронта | Где вызывается | Ручка на бэке | Что делает |
 |---|---|---|---|
 | `workService.workAsDvornik()` | `features/economy/work-page/work-page.ts` | `POST /api/work/dvornik`, `WorkController.workAsDvornik` | Тап-фарм работы «дворник» (награда монетами/XP, кулдаун). |
-| `applicationService.buyFirstLocation(payload)` | `features/economy/buy-first-location/buy-first-location.ts` | `POST /api/applications/buy-first-location`, `ApplicationController.buyFirstLocation` | Подать заявку на покупку первой локации (для «бомжей»). |
+| `applicationService.buyFirstLocation(payload)`, `ApplicationController.buyFirstLocation` | Подать заявку на покупку первой локации (для «бомжей»). |
 | `applicationService.getMyApplications()` | не используется в UI | `GET /api/applications/my`, `ApplicationController.getMyApplications` | Список своих заявок. |
 
 ### 1.10. Выборы
 
 | Метод фронта | Где вызывается | Ручка на бэке | Что делает |
 |---|---|---|---|
-| `electionService.getOverview(districtId)` | `features/chat/chat-area/chat-area.ts` | `GET /api/elections/district/{districtId}/overview`, `ElectionController.getOverview` | Состояние выборов района (активные или результат последних) — мини-таблица. |
-| `electionService.initiate(districtId)` | `features/chat/chat-area/chat-area.ts` | `POST /api/elections/initiate?districtId=`, `ElectionController.initiate` | Шаг 1 — начать выборы; инициатор — первый кандидат (гейт уровня 3). |
-| `electionService.join(pollId)` | `features/chat/chat-area/chat-area.ts` | `POST /api/elections/{pollId}/join`, `ElectionController.join` | Шаг 2 — стать кандидатом в идущих выборах. |
-| `electionService.vote(pollId, candidateId)` | `features/chat/chat-area/chat-area.ts` | `POST /api/elections/{pollId}/vote?candidateId=`, `ElectionController.vote` | Шаг 3 — проголосовать за кандидата. |
-| `electionService.close(pollId)` | `features/chat/chat-area/chat-area.ts` | `POST /api/elections/{pollId}/close`, `ElectionController.close` | Досрочно завершить выборы, подсчёт голосов + результат. |
+| `electionService.getOverview(districtId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `GET /api/elections/district/{districtId}/overview`, `ElectionController.getOverview` | Состояние выборов района (активные или результат последних) — мини-таблица. |
+| `electionService.initiate(districtId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/initiate?districtId=`, `ElectionController.initiate` | Шаг 1 — начать выборы; инициатор — первый кандидат (гейт уровня 3). |
+| `electionService.join(pollId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/join`, `ElectionController.join` | Шаг 2 — стать кандидатом в идущих выборах. |
+| `electionService.vote(pollId, candidateId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/vote?candidateId=`, `ElectionController.vote` | Шаг 3 — проголосовать за кандидата. |
+| `electionService.close(pollId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/close`, `ElectionController.close` | Досрочно завершить выборы, подсчёт голосов + результат. |
 | `electionService.getStatus(pollId)` | не используется в UI | `GET /api/elections/{pollId}`, `ElectionController.getStatus` | Статус голосования. |
 | `electionService.getCandidates(pollId)` | не используется в UI | `GET /api/elections/{pollId}/candidates`, `ElectionController.getCandidates` | Список кандидатов. |
 
@@ -172,7 +172,7 @@
 
 | Топик/событие | Где фронт слушает | Где на бэке | Кто вызывает |
 |---|---|---|---|
-| Слушает `/topic/location.{locationId}.presence` | `features/location/location-view/services/online-tracking.service.ts` | `PresenceService.broadcastPresenceDetail` | `PresenceService` (`enterRoom`, `leaveRoom`, `onTick` по heartbeat-таймауту) |
+| Слушает `/topic/location.{locationId}.presence` | `features/location/room-view/services/online-tracking.service.ts` | `PresenceService.broadcastPresenceDetail` | `PresenceService` (`enterRoom`, `leaveRoom`, `onTick` по heartbeat-таймауту) |
 | Слушает `/topic/locations.presence-counts` | `features/sidebar/service/online-tracking-sidebar.service.ts` | `PresenceService.broadcastPresenceCount` | `PresenceService` (`enterRoom`, `leaveRoom`, `onTick`) |
 
 ### 2.3. Непрочитанные (Unread)

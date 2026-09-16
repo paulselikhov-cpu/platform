@@ -1,78 +1,53 @@
-# План: реактивное обновление персонажа у других пользователей (без F5)
+# Реактивное обновление персонажа (без F5)
 
-> Статус: **план** (не реализовано). Задача на будущее.
-> Связано: админская таблица «Персонажи района».
+> Как реализовано: сервер сам пушит факт изменения персонажа, фронт
+> перезагружает `currentChatUser` без F5.
 
 ## Проблема
 
-Когда админ меняет поля персонажа (роль, XP, монеты и т.д.) в админской таблице
-`DistrictUsersTable`, изменения сохраняются в БД, но **UI других пользователей
-(и обычно самого админа) не обновляется** до перезагрузки страницы (F5).
+Каждый клиент держит собственный локальный сигнал `currentChatUser`
+(`CurrentChatUserService`). Изменения на сервере (одобрение заявки,
+админская правка) не доходили до открытых SPA-вкладок до перезагрузки
+страницы.
 
-Причина: каждый клиент держит собственный локальный сигнал `currentChatUser`
-(`CurrentChatUserService`). HTTP-PUT меняет данные на сервере, но сервер не
-уведомляет другие открытые SPA-вкладки/пользователей об изменении.
+## Бэкенд
 
-## Что уже сделано (быстрый локальный фикс)
+1. **Событие** `CharacterUpdatedEvent` (`core.event`, `EventType.CHARACTER_UPDATED`):
+   - зарегистрировано в `@JsonSubTypes` базового `DomainEvent` (нужно для
+     replay из `event_publication`);
+   - `targetId = scopeId = characterId` (внутренний ChatUser.id);
+   - payload пуст — слушателю достаточно id, полный профиль фронт
+     перезапрашивает сам по REST.
+2. **Публикация**: `ApplicationService.resolve()` публикует событие в той же
+   транзакции, что и применение последствий заявки (`handler.handle()` +
+   `save`), — только для заявок, меняющих ChatUser (паспорт, лицензия).
+3. **Подписчик** `CharacterUpdatedListener` (модуль notification,
+   `@ApplicationModuleListener` — AFTER_COMMIT + outbox-гарантии Modulith):
+   - по `characterId` находит `ChatUser` → у него есть `username`;
+   - WS-пуш `SimpMessagingTemplate.convertAndSendToUser(username,
+     "/queue/character-updated", new CharacterUpdatedResponse(character.getId()))`;
+   - `CharacterUpdatedResponse` — record c одним полем `characterId`.
 
-`DistrictUsersTable.save()` после успешного сохранения вызывает
-`currentUserService.refresh()` — **если среди сохранённых был сам текущий админ**.
-Это чинит только тот браузер, который нажал «Сохранить». У остальных — по-прежнему F5.
+Адресация по `characterId` (не по User.id): у пользователя несколько
+персонажей (по одному на район), обновляться должен только изменённый.
 
-`refresh()` перезагружает `currentChatUser` и пересчитывает `userLevel`.
+## Фронтенд
 
-## Целевое решение (реактивно у всех)
+4. Подписка в `CurrentChatUserService` (root, живёт всё время):
+   `stomp.topic<{characterId}>('/user/queue/character-updated')` → `refresh()`.
+   Используется существующее WS-соединение (`StompConnectionService`), новое
+   не создаётся.
+5. Следствия автоматические (всё подписано на `currentChatUser`):
+   - `CharacterPanel` (монеты/энергия/XP/паспорт/лицензия/статус) обновляется
+     у владельца;
+   - роль → видимость пунктов nav-rail (в т.ч. «Настройки района») меняется
+     реактивно;
+   - уровень пересчитывается (XP → порог уровня на бэке).
 
-Нужен **push с бэкенда** (сервер → клиент), как уже сделано для уведомлений
-выборов/заявок (`/user/{username}/queue/notifications`).
+## Связь с уведомлением о заявке
 
-### Бэкенд
-
-1. **Доменное событие** `CharacterUpdatedEvent` в `core.event`:
-   - `targetId = characterId` (кто изменился);
-   - зарегистрировать в `@JsonSubTypes` базового `DomainEvent` (и в `EventType`).
-2. **Публикация**: в `ChatUserService.updateCharacterSettings` (после `save`)
-   → `eventPublisher.publish(new CharacterUpdatedEvent(characterId, districtId))`.
-3. **Listener** `CharacterUpdatedListener` (аналогично `NotificationEventListener`):
-   - по `characterId` найти `ChatUser` → у него есть `username`;
-   - WS-пуш через `SimpMessagingTemplate.convertAndSendToUser(username, "/queue/character-updated", payload)`;
-   - payload — `CharacterUpdatedResponse` (полное обновлённое `ChatUser` или id).
-
-### Фронтенд
-
-4. **Подписка в `CurrentChatUserService`** (root, живёт всё время):
-   - `this.stomp.topic<CharacterUpdatedResponse>('/user/queue/character-updated')`;
-   - по событию — `this.refresh()` (перезагрузить профиль + уровень) и/или
-     сразу проставить сигнал из payload (быстрее, без лишнего GET).
-5. **Следствия автоматические** (т.к. всё подписано на `currentChatUser`):
-   - `CharacterPanel` (монеты/энергия/XP) обновится у владельца;
-   - роль у админа/модератора → видимость `nav-rail` «Настройки района»
-     изменится реактивно;
-   - уровень пересчитается (XP → порог уровня на бэке).
-
-### Важные нюансы
-
-- **Адресность**: пушить только тому, чей персонаж изменился (не всем подряд).
-  У `ChatUser` есть `username` — целевой юзер определяется по нему.
-- **Когда пушить**: только при реально изменённых полях (уже есть `isChanged`
-  логика на клиенте; на бэке гейт — если все поля `null` — не публиковать).
-- **Роль/права**: если админ меняет кому-то роль, у получателя должен
-  перезагрузиться и `currentChatUser`, чтобы nav-rail обновился — тот же `refresh()`.
-- **Одно соединение**: используем существующий `StompConnectionService.topic<T>()`
-  (как `NotificationService`), новое WS-соединение не создаём.
-
-## Оценка трудозатрат
-
-- Быстрый локальный фикс (себе видно без F5): **~10 строк**, уже сделан.
-- Полный реактивный вариант у всех: **средне** (новое событие + listener + WS-пуш
-  + одна подписка на клиенте). Паттерн в проекте уже есть (выборы/заявки), так что
-  это «работа по образцу», не с нуля.
-
-## DoD
-
-- [ ] `CharacterUpdatedEvent` создан и зарегистрирован;
-- [ ] публикация из `ChatUserService.updateCharacterSettings`;
-- [ ] Listener шлёт WS-пуш целевому пользователю;
-- [ ] `CurrentChatUserService` подписан и вызывает `refresh()`;
-- [ ] у владельца панель персонажа и роль обновляются без F5;
-- [ ] интеграционный тест сквозного пути (update → событие → push → refresh).
+Параллельно в `/user/queue/notifications` уходит уведомление
+APPLICATION_RESULT с контекстом `data={applicationType, applicationStatus}`
+— фронт использует его для отображения в колокольчике и точечных реакций на
+конкретный тип заявки. Канал `character-updated` — общий «факт изменения
+профильных данных» и не требует разбора типа заявки на фронте.

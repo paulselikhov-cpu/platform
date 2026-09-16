@@ -35,7 +35,8 @@
 | Районы и системные локации | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
 | Должности в системных локациях (LocationPost) | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
 | Четырёхслойная архитектура election-сценария | [`scenarios/the-first-election.md`](scenarios/the-first-election.md) (см. таблицы Layers 1–4) |
-| RoomFeature — фичи комнат (меню «⚡ Действия» + контент-панель) | [`architecture/chat/room-feature.md`](architecture/chat/room-feature.md) |
+| RoomView / RoomFeature — фичи комнат: режимы отображения (views) + меню «⚡ Действия» | [`architecture/chat/room-feature.md`](architecture/chat/room-feature.md) |
+| Реактивное обновление персонажа (character-updated push, без F5) | [`architecture/reactive-character-updates.md`](architecture/reactive-character-updates.md) |
 
 ## Сценарии
 
