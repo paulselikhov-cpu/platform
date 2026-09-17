@@ -181,8 +181,8 @@ flowchart LR
 
 | Метод | URL | Возвращает | Используется в |
 |---|---|---|---|
-| `GET` | `/api/location-members/{locationId}/online-ids` | `List<Long>` — полный список id | `OnlineTrackingService` (снапшот) |
-| `GET` | `/api/location-members/online-counts?locationIds=8,9,10` | `Map<Long, Long>` — счётчики батчем | `OnlineTrackingSidebarService` |
+| `GET` | `/api/location-users/{locationId}/online-ids` | `List<Long>` — полный список id | `OnlineTrackingService` (снапшот) |
+| `GET` | `/api/location-users/online-counts?locationIds=8,9,10` | `Map<Long, Long>` — счётчики батчем | `OnlineTrackingSidebarService` |
 
 ### WS-топики
 

@@ -33,7 +33,8 @@
    запись в БД + broadcast. Hot-path нагружает PostgreSQL постоянно.
 3. **Modulith `events-jpa` пишет каждое событие в PostgreSQL.** Для MVP корректно;
    при росте темпа событий транспорт заменяется без переписывания контракта
-   `DomainEvent` и подписчиков (см. `event-migration-plan.md`, «Ключевые решения» п.1).
+   `DomainEvent` и подписчиков (событие — неизменяемый контракт, транспорт меняется
+   конфигурацией).
 4. **Блокирующий JPA/JDBC.** WebFlux сам по себе это не лечит; ограничителем становится
    пул соединений к БД.
 
@@ -51,8 +52,8 @@
 2. **Presence, online-счётчики, unread-счётчики — в Redis** (сейчас в PostgreSQL).
    Контракт для клиента не меняется: те же WS-топики (`/topic/location.{id}.presence`,
    `/topic/locations.presence-counts`) и те же REST-эндпоинты.
-3. **Кулдауны / энергия / квоты — Redis TTL** (уже заложено в `concept.md` §9 и
-   `mvp-ai-brief.md` §2.3) — реализуется тем же подключением Redis, что и п.2.
+3. **Кулдауны / энергия / квоты — Redis TTL** (заложено в `concept.md` §9) —
+   реализуется тем же подключением Redis, что и п.2.
 4. **Горизонтальное масштабирование:** несколько инстансов `babich-app` за nginx;
    WS-соединения sticky; общий брокер и общий Redis делают инстансы взаимозаменяемыми.
 5. **WebFlux/Netty — опциональный этап, не решение.** Он дёшево держит много
@@ -87,5 +88,5 @@ SimpleBroker остался бы in-JVM, JPA остался бы блокиру�
 ## Связанные документы
 
 - [`architecture/presence/online-tracking.md`](../presence/online-tracking.md) — текущая presence-схема (PostgreSQL)
-- [`architecture/event/event-migration-plan.md`](../event/event-migration-plan.md) — «Ключевые решения» п.1: замена транспорта Modulith при multi-instance
+- [`architecture/event/babichchat-event-architecture.md`](../event/babichchat-event-architecture.md) — событийная архитектура
 - [`vision/concept.md`](../../vision/concept.md) §9 — Redis TTL для кулдаунов/энергии (пишется человеком)

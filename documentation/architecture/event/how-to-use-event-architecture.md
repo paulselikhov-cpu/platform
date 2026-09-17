@@ -6,8 +6,7 @@
 > с отсылками на реальные файлы кода.
 >
 > Если контекст потерян — читать этот файл первым, затем
-> [`event-migration-plan.md`](event-migration-plan.md) (что уже сделано)
-> и [`babichchat-event-architecture.md`](babichchat-event-architecture.md) (зачем это всё).
+> [`babichchat-event-architecture.md`](babichchat-event-architecture.md) (зачем это всё).
 
 ---
 

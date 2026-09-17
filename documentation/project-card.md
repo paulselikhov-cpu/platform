@@ -12,50 +12,27 @@
 
 | Раздел | Файл | Кто пишет/обновляет | Описание |
 |--------|------|----------------------|----------|
-| **Статус проекта** | [`status/project-status.md`](status/project-status.md) | AI | Модульная структура, что реализовано, план MVP, игровой цикл, открытые вопросы |
-| **Полная концепция** | [`vision/concept.md`](vision/concept.md) | Человек | Полное описание всех игровых механик, ролей, экономики (читать по необходимости) |
-| **Системная модель** | [`system-model/mvp-ai-brief.md`](system-model/mvp-ai-brief.md) | AI | Концепция на языке системы: Entity/Service/Enum по разделам концепции |
-| **Команды** | [`commands.md`](commands.md) | AI (актуализирует) | Рабочие команды для сборки/запуска backend, frontend, Docker |
-| **Диаграммы** | [`diagrams/`](diagrams/) | Человек | Только для человека, AI не открывает |
+| **Статус проекта** | [`status/project-status.md`](status/project-status.md) | AI | Сводка прогресса, техзадачи масштабирования |
+| **Сценарии (индекс)** | [`scenarios/index.md`](scenarios/index.md) | Гибрид | Все сценарии и их статусы |
+| **Полная концепция** | [`vision/concept.md`](vision/concept.md) | Человек | Игровые механики, роли, экономика (читать по необходимости) |
+| **Системная модель (карта кода)** | [`system-model/mvp-ai-brief.md`](system-model/mvp-ai-brief.md) | AI | Что реально есть в коде: модули, сущности, где искать |
+| **Шпаргалка фронт↔бэк** | [`architecture/front-back-communication.md`](architecture/front-back-communication.md) | AI | Все REST-ручки и WS-топики |
+| **Команды** | [`commands.md`](commands.md) | AI (актуализирует) | Сборка/запуск backend, frontend, Docker |
 
 ## Архитектурные заметки (AI, "как реализовано")
 
 | Тема | Файл |
 |------|------|
-| Event-driven архитектура (концепция) | [`architecture/event/babichchat-event-architecture.md`](architecture/event/babichchat-event-architecture.md) |
-| Event-driven архитектура (план миграции) | [`architecture/event/event-migration-plan.md`](architecture/event/event-migration-plan.md) — Этапы 1, 1.5, 2, 3, 4, 5, 6 ✅, следующий — 7 |
-| Как пользоваться event-архитектурой (инструкция для разработчика) | [`architecture/event/how-to-use-event-architecture.md`](architecture/event/how-to-use-event-architecture.md) — простым языком: ментальная модель, словарик, рецепт нового сценария, примеры из кода, DoD |
+| Event-driven архитектура (концепция и паттерны) | [`architecture/event/babichchat-event-architecture.md`](architecture/event/babichchat-event-architecture.md) |
+| Как пользоваться event-архитектурой (инструкция) | [`architecture/event/how-to-use-event-architecture.md`](architecture/event/how-to-use-event-architecture.md) — ментальная модель, рецепт нового сценария, DoD |
 | Read status / seen-by | [`architecture/chat/read-status.md`](architecture/chat/read-status.md) |
 | Лавина планировщиков при clock leap (fixedRate → fixedDelay) | [`architecture/chat/scheduler-clock-leap-fixed-rate-avalanche.md`](architecture/chat/scheduler-clock-leap-fixed-rate-avalanche.md) |
+| RoomView / RoomFeature — фичи комнат | [`architecture/chat/room-feature.md`](architecture/chat/room-feature.md) |
 | Синхронизация LocationUsersMenu | [`architecture/presence/location-users-menu-sync.md`](architecture/presence/location-users-menu-sync.md) |
 | Presence-архитектура | [`architecture/presence/online-tracking.md`](architecture/presence/online-tracking.md) |
 | Ранняя подписка на WS-топики | [`architecture/websocket/early-topic-subscription.md`](architecture/websocket/early-topic-subscription.md) |
-| Целевой масштаб 100k+ онлайн и Redis как realtime-хранилище (presence, счётчики); STOMP-брокер — RabbitMQ/Artemis | [`architecture/realtime/scale-targets-and-redis.md`](architecture/realtime/scale-targets-and-redis.md) |
 | Stomp/Chat сервисы | [`architecture/websocket/stomp-and-chat-service.md`](architecture/websocket/stomp-and-chat-service.md) |
-| Районы и системные локации | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
-| Должности в системных локациях (LocationPost) | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
-| Четырёхслойная архитектура election-сценария | [`scenarios/the-first-election.md`](scenarios/the-first-election.md) (см. таблицы Layers 1–4) |
-| RoomView / RoomFeature — фичи комнат: режимы отображения (views) + меню «⚡ Действия» | [`architecture/chat/room-feature.md`](architecture/chat/room-feature.md) |
-| Реактивное обновление персонажа (character-updated push, без F5) | [`architecture/reactive-character-updates.md`](architecture/reactive-character-updates.md) |
-
-## Сценарии
-
-| Сценарий | Статус | Файл |
-|----------|--------|------|
-| №1. Первый вход в дефолтный район | ✅ Реализовано | [`scenarios/entry-default-district.md`](scenarios/entry-default-district.md) |
-| №2. Первые выборы | ✅ Реализовано (backend, Event-Driven: ElectionResultHandlerAdapter + PollClosedEvent) | [`scenarios/the-first-election.md`](scenarios/the-first-election.md) |
-
-## Прогресс MVP
-
-| # | Шаг | Статус |
-|---|-----|--------|
-| 1 | Экономический слой (монеты, XP, энергия, RewardService) | ✅ |
-| 2 | Профессия «дворник» + статус «бомж» | ✅ |
-| 3 | Покупка первой локации через Application | ✅ |
-| 4–6 | Группировки (Воры, Проститутки) | ❌ |
-| 7 | Полицейский участок | ❌ |
-| 8 | Банк | ❌ |
-| 9 | Рынок (аренда прилавков) | ❌ |
-| 10 | Заглушка рынка недвижимости | ❌ |
-| 11 | LocationPost — должности в системных локациях | ✅ |
-| 12 | Авто-членство в системных локациях | ✅ |
+| Целевой масштаб 100k+ и Redis; этапы R1–R5 | [`architecture/realtime/scale-targets-and-redis.md`](architecture/realtime/scale-targets-and-redis.md) |
+| Районы и системные локации, LocationPost | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
+| Реактивное обновление персонажа (character-updated push) | [`architecture/reactive-character-updates.md`](architecture/reactive-character-updates.md) |
+| Четырёхслойная архитектура election-сценария | [`scenarios/2. the-first-election.md`](scenarios/2.%20the-first-election.md) (таблицы Layers 1–4) |

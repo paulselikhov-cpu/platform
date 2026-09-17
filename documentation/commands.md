@@ -9,6 +9,9 @@
 # Сборка проекта
 cd babich-app && mvn clean install -DskipTests
 
+# Быстрая проверка компиляции (без полного clean install)
+cd babich-app && mvn -q compile -DskipTests
+
 # Запуск backend
 cd babich-app && mvn spring-boot:run
 
@@ -33,11 +36,29 @@ cd platform-ui && npm run start
 cd platform-ui && npx ng build --project babich-chat-ui
 ```
 
-## Frontend (babich-app — второй Angular проект, если есть)
+## Git
 
 ```bash
-cd babich-app && npm install
-cd babich-app && npm run start
+# Статус / диф / история
+git status
+git diff
+git diff --stat
+git log --oneline -10
+
+# Добавить все изменения (только add, пушить нельзя — правило проекта)
+git add -A
+```
+
+## Поиск по коду (быстрая навигация)
+
+```bash
+# Все классы модуля / списка файлов
+find babich-app/src/main/java/com/platform/chat/modules -type f -name '*.java' | sort
+
+# Где объявлена сущность / поле / эндпоинт
+grep -rn "class ChatUser" babich-app/src/main/java --include='*.java'
+grep -rn "@GetMapping\|@PostMapping" babich-app/src/main/java --include='*.java'
+grep -rn "someSignal" platform-ui/projects/babich-chat-ui/src/app --include='*.ts'
 ```
 
 ## Инфраструктура (Docker)
@@ -55,6 +76,22 @@ docker-compose down
 
 # Просмотр логов
 docker-compose logs -f
+```
+
+## База данных (dev, PostgreSQL в Docker)
+
+```bash
+# Список таблиц
+docker exec babich-postgres psql -U chatuser -d chatdb -c "\dt"
+
+# Произвольный запрос
+docker exec babich-postgres psql -U chatuser -d chatdb -c "select * from location_users order by id;"
+
+# Удалить легаси-таблицы, оставшиеся от старой схемы.
+# ddl-auto: create пересоздаёт только таблицы, замапленные в entity,
+# поэтому старые таблицы (location_members, location_posts) висят в dev-БД вечно.
+docker exec babich-postgres psql -U chatuser -d chatdb \
+  -c "DROP TABLE IF EXISTS location_members;" -c "DROP TABLE IF EXISTS location_posts;"
 ```
 
 ## Генерация сущностей / компонентов (Angular)

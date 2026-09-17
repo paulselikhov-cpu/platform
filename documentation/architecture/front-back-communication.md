@@ -81,11 +81,11 @@
 
 | Метод фронта | Где вызывается | Ручка на бэке | Что делает |
 |---|---|---|---|
-| `locationMembersService.getLocationUsers(locationId, params)` | `features/location/room-view/location-users-menu/location-users-menu.ts` | `GET /api/location-members/{locationId}/users?page&size&filter&query`, `LocationMembersController.getLocationUsers` | Paged-список участников локации (поиск + фильтр по присутствию). |
-| `locationMembersService.getUnreadCounts(locationIds, characterId)` | `features/sidebar/service/unread-tracking-sidebar.service.ts` | `GET /api/location-members/unread-counts?locationIds&characterId`, `LocationMembersController.getUnreadCounts` | Суммарные непрочитанные по локациям (бейджи сайдбара). |
-| `locationMembersService.getUnreadSummary(locationId, characterId)` | `features/sidebar/service/unread-tracking-sidebar.service.ts` (`loadRoomBreakdown`) | `GET /api/location-members/{locationId}/unread?characterId`, `LocationMembersController.getUnreadSummary` | Разбивка непрочитанных по комнатам локации. |
-| `locationMembersService.getOnlineCount(locationId)` | помечен `@not_used` | `GET /api/location-members/{locationId}/online-count`, `LocationMembersController.getOnlineCount` | Число онлайн в локации (не используется, см. WS). |
-| `locationMembersService.getOnlineCharacterIds(locationId)` | помечен `@not_used` | `GET /api/location-members/{locationId}/online-ids`, `LocationMembersController.getOnlineCharacterIds` | Список онлайн-персонажей локации (не используется, см. WS). |
+| `locationUsersService.getLocationUsers(locationId, params)` | `features/location/room-view/location-users-menu/location-users-menu.ts` | `GET /api/location-users/{locationId}/users?page&size&filter&query`, `LocationUsersController.getLocationUsers` | Paged-список участников локации (поиск + фильтр по присутствию). |
+| `locationUsersService.getUnreadCounts(locationIds, characterId)` | `features/sidebar/service/unread-tracking-sidebar.service.ts` | `GET /api/location-users/unread-counts?locationIds&characterId`, `LocationUsersController.getUnreadCounts` | Суммарные непрочитанные по локациям (бейджи сайдбара). |
+| `locationUsersService.getUnreadSummary(locationId, characterId)` | `features/sidebar/service/unread-tracking-sidebar.service.ts` (`loadRoomBreakdown`) | `GET /api/location-users/{locationId}/unread?characterId`, `LocationUsersController.getUnreadSummary` | Разбивка непрочитанных по комнатам локации. |
+| `locationUsersService.getOnlineCount(locationId)` | помечен `@not_used` | `GET /api/location-users/{locationId}/online-count`, `LocationUsersController.getOnlineCount` | Число онлайн в локации (не используется, см. WS). |
+| `locationUsersService.getOnlineCharacterIds(locationId)` | помечен `@not_used` | `GET /api/location-users/{locationId}/online-ids`, `LocationUsersController.getOnlineCharacterIds` | Список онлайн-персонажей локации (не используется, см. WS). |
 
 ### 1.7. Сообщения (HTTP — история и удаление)
 
@@ -101,7 +101,7 @@
 
 | Метод фронта | Где вызывается | Ручка на бэке | Что делает |
 |---|---|---|---|
-| `locationPostService.getPostsByLocation(locationId)` | `shared/components/modals/district-info-modal/district-info-modal.ts` | `GET /api/location-posts/by-location/{locationId}`, `LocationPostController.getPostsByLocation` | Должности локации с именем занимающего (модалка «о районе»). |
+| `locationUsersService.getSystemRolesByLocation(locationId)` | `shared/menu/district-info-menu/district-info-menu.ts` | `GET /api/location-users/{locationId}/system-roles`, `LocationUsersController.getSystemRolesByLocation` | Должности системной локации с именем занимающего (меню «о районе»). |
 
 ### 1.9. Экономика и гражданские заявки
 

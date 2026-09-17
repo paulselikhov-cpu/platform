@@ -34,25 +34,27 @@
   - `inviteCode` — код приглашения (только для пользовательских)
   - `isPublic` — публичная/приватная (только для пользовательских)
   - `rooms` — список комнат локации
-  - `members` — список участников (LocationMember)
+  - `members` — список участников (LocationUser, таблица `location_users`)
 
-#### 3. LocationPost (Должность в системной локации)
-- **Назначение**: Связывает персонажа с должностью в системной локации
+#### 3. LocationUser (Членство в локации + должность)
+- **Назначение**: Универсальная таблица-мост `ChatUser` ↔ `Location` для обеих категорий локаций (таблица `location_users`)
 - **Поля**:
   - `id` — уникальный идентификатор
-  - `location` — системная локация (Location с `isSystem = true`)
-  - `character` — персонаж, занимающий должность
-  - `post` — тип должности (enum `LocationPost`)
-  - `appointedAt` — когда назначен
+  - `location` — локация (системная или пользовательская)
+  - `character` — персонаж-участник
+  - `role` — локальная роль в этой локации: `OWNER`, `MODERATOR`, `MEMBER`
+  - `isRegistered` — «прописан» (true у владельца и назначенного модератора)
+  - `systemRole` — должность в системной локации (`SystemRoleType`), null = обычный участник
+  - `appointedAt` — когда назначен на должность
+  - `joinedAt` — когда вступил в локацию
 - **Ограничения**:
-  - `UNIQUE (location_id, character_id)` — персонаж не может иметь две должности в одной локации
-  - `UNIQUE (location_id, post)` — для единоличных должностей (например, GOVERNOR, BANK_DIRECTOR)
-
-#### 4. LocationMember (Членство в локации)
-- **Назначение**: Универсальная таблица-мост `ChatUser` ↔ `Location` для обеих категорий локаций
-- Для **приватных** локаций: создаётся при вступлении по инвайту/покупке
-- Для **системных** локаций: создаётся **автоматически** при первом входе персонажа в район (см. раздел "Авто-членство")
-- Роли: `OWNER`, `MODERATOR`, `MEMBER`
+  - `UNIQUE (location_id, character_id)` — один персонаж = одна запись = максимум одна должность в локации
+- Для **пользовательских** локаций: запись создаётся при создании локации (`OWNER`)
+  или при вступлении по invite-коду (`MEMBER`)
+- Для **системных** локаций: запись создаётся только при назначении на должность — авто-членства нет
+  (см. «Членство и должности в системных локациях»)
+- Отдельной сущности должности больше нет: прежние `LocationPost` / таблица `location_posts`
+  упразднены, должность хранится в `location_users.system_role`
 
 ### Типы системных локаций (PublicLocationType)
 
@@ -67,36 +69,36 @@
 7. **GENERAL_MARKET** — Рынок (аналог "Авито", свободная аренда прилавков)
 8. **REAL_ESTATE_MARKET** — Рынок недвижимости (купля-продажа локаций)
 
-### Должности системных локаций (LocationPost)
+### Должности системных локаций (SystemRoleType)
 
-| Должность | Локация | Тип | Слотов | Описание |
-|-----------|---------|-----|--------|----------|
-| GOVERNOR | CITY_HALL | chatUser.civic_role= DIRECTOR | 1 | Глава администрации района (назначается/избирается) |
-| MAYOR | CITY_HALL | chatUser.civic_role= DIRECTOR | N | Мэр (назначается) |
-| DEPUTY | CITY_HALL | chatUser.civic_role= DIRECTOR | N | Депутат (назначается) |
-| POLICE_OFFICER | POLICE_STATION | civic_role | N | Полицейский (фиксированное число слотов на район) |
-| BANK_DIRECTOR | BANK | chatUser.civic_role= DIRECTOR | 1 | Директор банка |
-| BANK_EMPLOYEE | BANK | chatUser.civic_role= DIRECTOR | N | Сотрудник банка |
-| REAL_ESTATE_DIRECTOR | REAL_ESTATE_MARKET | chatUser.civic_role= DIRECTOR | 1 | Владелец рынка недвижимости |
+Хранятся в `location_users.system_role`; допустимые для типа локации должности —
+карта `ALLOWED_ROLES` в `LocationUsersService`.
 
-### Авто-членство в системных локациях
+| Должность | Локация | Слотов | Описание |
+|-----------|---------|--------|----------|
+| GOVERNOR | CITY_HALL | 1 | Глава администрации района (назначается/избирается) |
+| MAYOR | CITY_HALL | 1 | Мэр (назначается) |
+| DEPUTY | CITY_HALL | N | Депутат (назначается) |
+| POLICE_OFFICER | POLICE_STATION | N | Полицейский (фиксированное число слотов на район) |
+| BANK_DIRECTOR | BANK | 1 | Директор банка |
+| BANK_EMPLOYEE | BANK | N | Сотрудник банка |
+| REAL_ESTATE_DIRECTOR | REAL_ESTATE_MARKET | 1 | Владелец рынка недвижимости |
 
-При первом входе персонажа в район (назначении района персонажу) автоматически создаются записи `LocationMember` для всех системных локаций этого района:
+### Членство и должности в системных локациях
 
-```
-Логика:
-1. Персонажу назначен район (district_id в ChatUser)
-2. Сервис проверяет: есть ли у персонажа location_members для системных локаций этого района?
-3. Если нет — создаёт N записей LocationMember (character, location, role = MEMBER, isRegistered = false)
-   для всех Location WHERE isSystem = true AND district_id = ?
-4. Если записи уже есть (повторный вход) — пропускаем
-```
+После реформы модели («LocationUser», упразднение `LocationPost`) авто-членства больше нет:
+
+- Персонаж **не** получает записей `location_users` в системных локациях района при входе/создании.
+- Member системной локации = держатель должности (`system_role` не null). Запись появляется
+  только при назначении на должность (`appointSystemRole`) — в т.ч. при победе на выборах губернатора.
+- Писать в системную локацию и видеть сообщения вживую можно и без членства
+  (право отправки не требует membership).
 
 Это обеспечивает:
-- Unread-счётчики работают для системных локаций без изменений
-- Presence показывает участников системных локаций
-- Системные локации отображаются в списке "мои локации" у персонажа
-- Единая модель прав (`LocationMember.role`) для обеих категорий локаций
+- Unread-рассылка в системной локации уходит только штату (держателям должностей).
+- Presence показывает физическое присутствие по `CharacterPresence`, а не по members.
+- Системная локация попадает в «мои локации» только если персонаж в ней что-то занимает.
+- Единая модель прав (`LocationUser.role`) + отдельное поле должности (`LocationUser.systemRole`).
 
 ## База данных
 
@@ -123,33 +125,25 @@ CREATE TABLE locations (
     description TEXT,
     is_system BOOLEAN NOT NULL DEFAULT FALSE,
     type VARCHAR(30),
+    category VARCHAR(20),
+    xp_location BIGINT NOT NULL DEFAULT 0,
+    gang_id BIGINT,
     invite_code VARCHAR(20) UNIQUE,
     is_public BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP
 );
 ```
 
-#### location_posts (должности)
+#### location_users (членство в локациях, обе категории + должность)
 ```sql
-CREATE TABLE location_posts (
+CREATE TABLE location_users (
     id BIGSERIAL PRIMARY KEY,
     location_id BIGINT NOT NULL REFERENCES locations(id),
     character_id BIGINT NOT NULL REFERENCES chat_users(id),
-    post VARCHAR(50) NOT NULL,
-    appointed_at TIMESTAMP NOT NULL,
-    UNIQUE (location_id, character_id),
-    UNIQUE (location_id, post)  -- для единоличных должностей
-);
-```
-
-#### location_members (членство в локациях, обе категории)
-```sql
-CREATE TABLE location_members (
-    id BIGSERIAL PRIMARY KEY,
-    location_id BIGINT NOT NULL REFERENCES locations(id),
-    character_id BIGINT NOT NULL REFERENCES chat_users(id),
-    role VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
+    role VARCHAR(20) NOT NULL DEFAULT 'MEMBER',   -- OWNER / MODERATOR / MEMBER
     is_registered BOOLEAN NOT NULL DEFAULT FALSE,
+    system_role VARCHAR(50),                      -- должность системы; null = обычный member
+    appointed_at TIMESTAMP,                       -- когда назначен на должность
     joined_at TIMESTAMP,
     UNIQUE (location_id, character_id)
 );
@@ -165,7 +159,8 @@ CREATE TABLE location_members (
 Особенности:
 - Площадь Ленина содержит 2 комнаты: "Площадь" и "Тёплые трубы" (для бомжей)
 - Все остальные системные локации содержат по 1 базовой комнате
-- Записи `location_members` для системных локаций создаются **не при инициализации района**, а при первом входе каждого конкретного персонажа в этот район
+- Записи `location_users` в системных локациях создаются **только при назначении** на должность —
+  авто-членства для всех жителей района больше нет (упразднено вместе с `autoJoinSystemLocations`).
 
 ## Backend API
 
@@ -193,20 +188,14 @@ CREATE TABLE location_members (
 #### GET /api/districts/{id}/system-locations
 Получить только системные локации конкретного района.
 
-#### POST /api/location-posts/appoint
-Назначить персонажа на должность в системной локации.
+#### POST /api/location-users/appoint-system-role?locationId&characterId&systemRole
+Назначить персонажа на должность в системной локации (ADMIN платформы или глава локации; назначаемый — житель того же района).
 
-**Request:**
-```json
-{
-  "locationId": 1,
-  "characterId": 42,
-  "post": "POLICE_OFFICER"
-}
-```
-
-#### DELETE /api/location-posts/{id}/dismiss
+#### DELETE /api/location-users/remove-system-role?locationUserId
 Снять персонажа с должности.
+
+#### GET /api/location-users/{locationId}/system-roles
+Должности системной локации с именами занимающих (для UI мэрии/банка и т.п.).
 
 ## Структура кода
 
@@ -214,36 +203,34 @@ CREATE TABLE location_members (
 babich-app/src/main/java/com/platform/chat/
 ├── entity/
 │   ├── District.java              # Entity района
-│   ├── Location.java              # Единая entity (isSystem + type)
-│   ├── LocationMember.java        # Членство в любой локации
-│   ├── LocationPost.java          # Должность в системной локации
+│   ├── Location.java              # Единая entity (isSystem + type + category/xpLocation/gangId)
+│   ├── LocationUser.java          # Членство в любой локации + systemRole/appointedAt
+│   ├── Gang.java                  # Минимальная заготовка группировки (без FK)
 │   ├── Room.java                  # Комната (location_id, без public_location_id)
 │   └── ChatUser.java              # Персонаж (district_id)
 ├── enums/
 │   ├── PublicLocationType.java    # Типы системных локаций (8 типов)
-│   ├── LocationMemberRole.java    # OWNER / MODERATOR / MEMBER
-│   └── LocationPost.java          # GOVERNOR, POLICE_OFFICER и т.д.
+│   ├── LocationCategoryType.java  # BUSINESS / HOME (все локации)
+│   ├── SystemRoleType.java        # GOVERNOR, POLICE_OFFICER и т.д. (бывший LocationPostType)
+│   └── LocationUserRole.java      # OWNER / MODERATOR / MEMBER
 ├── repository/
 │   ├── district/
 │   │   └── DistrictRepository.java
 │   └── location/
 │       ├── LocationRepository.java
-│       ├── LocationMemberRepository.java
-│       └── LocationPostRepository.java
+│       └── LocationUserRepository.java
 ├── service/
 │   ├── district/
 │   │   └── DistrictService.java
 │   └── location/
 │       ├── LocationService.java
-│       ├── LocationMembersService.java
-│       └── LocationPostService.java
+│       └── LocationUsersService.java
 ├── controller/
 │   ├── district/
 │   │   └── DistrictController.java
 │   └── location/
 │       ├── LocationController.java
-│       ├── LocationMembersController.java
-│       └── LocationPostController.java
+│       └── LocationUsersController.java
 └── dto/response/
     ├── DistrictResponse.java
     ├── LocationResponse.java
@@ -256,16 +243,17 @@ babich-app/src/main/java/com/platform/chat/
 - Системные локации нельзя удалить или изменить пользователям
 - Каждый район имеет фиксированный набор из 8 типов локаций
 - Приватные локации (жильё) также относятся к району через поле `district_id`
-- Записи `location_members` для системных локаций создаются автоматически при первом входе персонажа в район — не требуется ручного вступления
-- Должности (`location_posts`) создаются отдельно, через механизм назначения (заявка/администратор)
+- Записи `location_users` в системных локациях появляются только при назначении на должность (`appointSystemRole`) — авто-членства и ручного вступления нет
+- Должность хранится в поле `location_users.system_role` (упразднена таблица `location_posts`)
 
-## Назначение на должность (LocationPost.appoint) — «как реализовано»
+## Назначение на должность (LocationUsersService.appointSystemRole) — «как реализовано»
 
-- **Доступ**: `POST/POST /api/location-posts/appoint` и `DELETE /{postId}/dismiss` — только персонажи с ролью `ChatRole.ADMIN` (роль берём вызывающего из JWT `Principal`, а не из target `characterId`; иначе `403`). Раньше роль не проверялась — 500.
-- **Идемпотентность**: если персонаж уже занимает эту же должность в локации — возвращается существующая запись (200), дубль не создаётся.
-- **Семантика согласована с ограничениями таблицы** (`unique(location_id, character_id)` и `unique(location_id, post)`):
-  - персонаж занимает **одну** должность в локации; попытка занять ещё одну — `400` "Персонаж уже занимает должность X";
-  - каждая должность в локации **одноместная**; если занята другим — `400` "Должность уже занята".
-  - Раньше проверка единоличности делалась только для GOVERNOR/BANK_DIRECTOR/REAL_ESTATE_DIRECTOR (`isSingleSlotPost`) — повторный MAYOR/прочая доходил до БД → `DataIntegrityViolationException` → 500.
+- **Доступ**: `POST /api/location-users/appoint-system-role?locationId&characterId&systemRole` — ADMIN платформы
+  (`ChatRole.ADMIN`) или глава локации (GOVERNOR для мэрии, BANK_DIRECTOR для банка и т.д. — карта `HEAD_ROLES`).
+- **Назначаемый** должен быть жителем того же района (замена прежней проверки membership).
+- **Локация** должна быть системной; роль — допустимой для её типа (карта `ALLOWED_ROLES`).
+- **Авто-права**: при назначении головы локации member автоматически получает `role = MODERATOR`.
+- **Идемпотентность**: если персонаж уже занимает эту же должность — тихий успех; если должность занята другим — `400` «Должность уже занята».
+- **Уникальность** обеспечивает `unique(location_id, character_id)` — один персонаж = одна запись = максимум одна должность в локации.
 - **Глобальный обработчик ошибок** `controller/GlobalExceptionHandler` (`@RestControllerAdvice`): необработанные `RuntimeException` с текстом → `400 {..., message}`, без текста (NPE и т.п.) → `500`; `DataIntegrityViolationException` → `409`; некорректный enum/число в `@RequestParam` → `400`. Локальные `@ExceptionHandler` (Work/Election) имеют приоритет.
-- **Известное расхождение**: в `LocationPostType` комментарии говорят, что DEPUTY/POLICE_OFFICER/BANK_EMPLOYEE — «N слотов», но `unique(location_id, post)` в БД делает **любую** должность одноместной. Пока это ограничение действует, назначить двух депутатов/полицейских в одну локацию нельзя. Если нужны N-слотовые должности — придётся менять constraint и добавлять отдельную проверку единоличности в сервис.
+- **Известное ограничение** (перенесено с `LocationPost`): в `SystemRoleType` DEPUTY/POLICE_OFFICER/BANK_EMPLOYEE помечены «N слотов», но `unique(location_id, character_id)` и логика `== null` допускают пока один слот на персонажа. Если нужны N-слотовые должности — расширить проверку в `LocationUsersService`.

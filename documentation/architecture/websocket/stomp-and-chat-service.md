@@ -120,7 +120,7 @@ sequenceDiagram
     OTS-->>View: presenceState (через shareReplay)
 ```
 
-`OnlineTrackingService` и `OnlineTrackingSidebarService` — независимые сервисы, каждый со своим кешем и своей логикой (см. `presence-architecture.md`). Они вызывают `StompConnectionService.subscribeRaw(...)` напрямую на **своих** топиках (`/topic/location.{id}.presence`, `/topic/locations.presence-counts`), никак не завязываясь на `ChatWebSocketService`. Это подтверждает главный тезис: **`StompConnectionService` — универсальный транспорт, а не часть чата**; чат — лишь один из его потребителей.
+`OnlineTrackingService` и `OnlineTrackingSidebarService` — независимые сервисы, каждый со своим кешем и своей логикой (см. `../presence/online-tracking.md`). Они вызывают `StompConnectionService.subscribeRaw(...)` напрямую на **своих** топиках (`/topic/location.{id}.presence`, `/topic/locations.presence-counts`), никак не завязываясь на `ChatWebSocketService`. Это подтверждает главный тезис: **`StompConnectionService` — универсальный транспорт, а не часть чата**; чат — лишь один из его потребителей.
 
 ---
 
