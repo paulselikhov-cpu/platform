@@ -36,3 +36,4 @@
 | Районы и системные локации, LocationPost | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
 | Реактивное обновление персонажа (character-updated push) | [`architecture/reactive-character-updates.md`](architecture/reactive-character-updates.md) |
 | Четырёхслойная архитектура election-сценария | [`scenarios/2. the-first-election.md`](scenarios/2.%20the-first-election.md) (таблицы Layers 1–4) |
+| Темизация UI: 4 темы, скин через design tokens | [`architecture/ui/theming.md`](architecture/ui/theming.md) |
