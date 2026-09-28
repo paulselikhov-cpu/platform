@@ -8,36 +8,35 @@
 
 ```
 com/platform/
-├── auth/          # User, JWT, Spring Security (не игровая логика)
+├── auth/                       # User, JWT, Spring Security (не игровая логика)
 └── chat/
-    ├── config/            # WebSocketConfig, JwtChannelInterceptor, DataInitializer
-    ├── controller/        # REST: chatUser, district, location, message, webSocket
-    ├── entity/            # ChatUser, District, Location, LocationUser, Room,
-    │                      # Message, RoomReadStatus, CharacterPresence, Gang,
-    │                      # DistrictSettings, Notification(в modules)
-    ├── enums/             # CivicRole, ChatRole, PublicLocationType, LocationCategoryType,
-    │                      # SystemRoleType, PersonLevel, LocationUserRole, MessageType...
-    ├── core/
-    │   ├── event/         # DomainEvent, DomainEventPublisher, EventType, ScopeType
-    │   │                  # (см. architecture/event/)
-    │   └── scheduler/     # SchedulerGateway (единственный @Scheduled), TickHandler,
-    │                      # ScheduledCheck/ScheduledCheckHandler (отложенные задачи)
-    ├── modules/
-    │   ├── application/   # Заявки: Application, ApplicationType (BUY_FIRST_LOCATION,
-    │   │                  # REGISTER_PASSPORT, REGISTER_WORK_LICENCE), стратегия
-    │   │                  # ApplicationHandler (BuyFirstLocationHandler, RegisterPassport,
-    │   │                  # RegisterWorkLicence)
-    │   ├── economy/       # RewardService, EnergyService, WorkService (тап-фарм),
-    │   │                  # TransactionLog + listener, RewardReason, Profession
-    │   ├── notification/  # Notification entity/REST, listeners (WS-пуш),
-    │   │                  # CharacterUpdatedListener
-    │   └── poll/          # Голосования/выборы: Poll, PollCandidate, PollVote,
-    │                      # ElectionFacade, PollService, PollResultHandler +
-    │                      # ElectionResultHandlerAdapter, PollCloseCheckHandler
-    ├── repository/        # JPA-репозитории по папкам
-    └── service/           # ChatUserService, DistrictService, LocationService,
-                           # LocationUsersService, MessageService, UnreadService,
-                           # PresenceService, PersonLevelService (service/level/)
+    ├── base/                   # базовые игровые сущности: entity/dto/repository/service
+    │   ├── chatUser/           # ChatUser (персонаж), EnergyService, ChatUserService
+    │   ├── district/           # District, DistrictSettings
+    │   ├── location/           # Location, LocationUser (бывший LocationPost), шаблоны локаций
+    │   └── room/               # Room, статусы прочтения
+    ├── core/                   # ядро: инфраструктура, общие процессы, контракты
+    │   ├── config/             # WebSocketConfig, JwtChannelInterceptor, DataInitializer
+    │   └── modules/
+    │       ├── application/    # ядро процесса заявки
+    │       │                   # (см. architecture/application/application-module-layers.md)
+    │       ├── domainEvent/    # ядро событий: DomainEvent, EventType, ScopeType,
+    │       │                   # events/ (7 фактов), DomainEventPublisher
+    │       │                   # (см. architecture/event/domain-event-module-layers.md)
+    │       ├── message/        # сообщения чата: entity/dto/controller/service
+    │       ├── notification/   # Notification: хранение + REST
+    │       ├── onlineSession/  # онлайн-сессии (presence)
+    │       ├── poll/           # Poll/PollCandidate/PollVote, PollResultDispatcher
+    │       ├── scheduledCheck/ # SchedulerGateway + ScheduledCheck
+    │       ├── transactionLog/ # TransactionLog + enum CoinUpdateReason (аудит)
+    │       └── webSocket/      # STOMP-инфраструктура и подписки
+    └── modules/                # фичи поверх ядра
+        ├── application/        # исполнители заявок (стратегии) + REST мэрии
+        ├── coin/               # CoinService — единая точка изменений монет/XP
+        ├── domainEvent/        # подписчики на события — Слой 4 «доставка»
+        ├── gang/               # Gang/GangMember (задел)
+        ├── governorElection/   # ElectionService, ElectionResult + REST выборов
+        └── work/               # WorkService (тап-фарм)
 ```
 
 ## Ключевые факты по персонажу и экономике
@@ -47,18 +46,25 @@ com/platform/
   `profession` (enum, по умолчанию DVORNIK), `civicRole` (enum CivicRole:
   DEPATY, DIRECTOR, HIRED_WORKER, UNEMPLOYED, POLICEMAN, BUSINESSMAN, CONVICTED),
   `passportId`, `workLicenceId`, `districtId`.
-- **Экономика**: все начисления через `RewardService` (coins/xp, reason-enum
-  `RewardReason`) → событие `CoinsChangedEvent`/`XpChangedEvent` →
-  `TransactionLogEventListener` пишет аудит в `TransactionLog`.
-  Отдельных сущностей CoinBalance/Energy нет — поля на ChatUser.
+- **Экономика**: все начисления через `CoinService` (`giveCoins`/`takeCoins`/`giveXp`,
+  reason-enum `CoinUpdateReason` в ядре аудита) → события `CoinsChangedEvent`/
+  `XpChangedEvent` из ядра событий → `TransactionLogEventListener` пишет аудит
+  в `TransactionLog`. Отдельных сущностей CoinBalance/Energy нет — поля на ChatUser.
 - **Энергия**: `EnergyService`, вычисление регенерации от `energyLastUpdated`.
   Redis пока не подключён (план — см. architecture/realtime/scale-targets-and-redis.md).
 - **Уровень**: `PersonLevel` — enum с XP-порогами (`PersonLevel.fromXp`),
   сервис `PersonLevelService` (гейты: `hasMinLevel`, порог следующего уровня для UI).
   Отдельной таблицы уровней нет.
-- **Заявки**: `Application` + стратегия `ApplicationHandler` по `ApplicationType`;
-  решение принимает сотрудник мэрии (модерация), не автоодобрение.
-  При resolve публикуются `ApplicationResolvedEvent` и `CharacterUpdatedEvent`.
+- **Заявки**: ядро процесса — `chat.core.modules.application` (`Application`,
+  `ApplicationType`, `ApplicationStatus`, порт `ApplicationHandler`, решение
+  `ApplicationDecision`, реестр `ApplicationHandlerRegistry`, команды
+  `ApplicationService`, чтения `ApplicationQueryService`, DTO `ApplicationSummary`);
+  исполнители — `chat.modules.application` (стратегии `RegisterPassport`,
+  `RegisterWorkLicence` выдают документ через `ChatUserService`).
+  Решение принимает сотрудник мэрии (модерация), не автоодобрение.
+  При resolve публикуются `ApplicationResolvedEvent` (ядро) и
+  `CharacterUpdatedEvent` (стратегия, через решение) — см.
+  architecture/application/application-module-layers.md.
 - **Выборы**: `ElectionFacade` → `PollService` → по истечении `endsAt`
   `PollCloseCheckHandler` (через SchedulerGateway) → `PollResultDispatcher` →
   `ElectionResultHandlerAdapter` назначает GOVERNOR (member с systemRole = GOVERNOR + MODERATOR) в мэрии.

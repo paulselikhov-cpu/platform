@@ -55,7 +55,7 @@ this.somethingHappened.emit({ id, amount });
 
 Это реальные классы из `babich-app/src/main/java/com/platform/...`.
 
-### 3.1. `DomainEvent` — «конверт события» (`core/event/DomainEvent.java`)
+### 3.1. `DomainEvent` — «конверт события» (`core/modules/domainEvent/DomainEvent.java`)
 Абстрактный класс — шаблон для всех событий. Каждый конверт несёт:
 - **`type`** — что произошло (см. `EventType` ниже);
 - **`actorId`** — *кто* инициатор (может быть `null`, если событие системное, например закрытие по таймеру);
@@ -67,15 +67,15 @@ this.somethingHappened.emit({ id, amount });
 объект. Если подписчику надо что-то сохранить (уведомление, аудит), он делает
 это сам, у себя в таблицах.
 
-### 3.2. `EventType` — реестр всех событий (`core/event/EventType.java`)
+### 3.2. `EventType` — реестр всех событий (`core/modules/domainEvent/EventType.java`)
 Просто enum-список: `POLL_CLOSED`, `ELECTION_CLOSED`, `COINS_CHANGED`,
 `XP_CHANGED`, `APPLICATION_RESOLVED`, `NOTIFICATION_SENT`,
 `POLL_CREATED`. Новое событие начинается с добавления значения сюда.
 
-### 3.3. `ScopeType` — «где случилось» (`core/event/ScopeType.java`)
+### 3.3. `ScopeType` — «где случилось» (`core/modules/domainEvent/enums/ScopeType.java`)
 `CHARACTER` (персонаж), `DISTRICT` (район), `PARLIAMENT`, `GANG`.
 
-### 3.4. `DomainEventPublisher` — «рупор» (`core/event/DomainEventPublisher.java`)
+### 3.4. `DomainEventPublisher` — «рупор» (`core/modules/domainEvent/service/DomainEventPublisher.java`)
 Единственная точка, через которую код *кричит* событие:
 ```java
 eventPublisher.publish(new SomeEvent(...));
@@ -118,13 +118,13 @@ eventPublisher.publish(new SomeEvent(...));
 
 > **Не путай две стороны одного события!** Правило выше касается ТОЛЬКО
 > подписчика (метода с `@ApplicationModuleListener`). На стороне **публикатора**
-> (`RewardService.giveCoins`, где вызывается `publish(...)`) своя `@Transactional`
+> (`CoinService.giveCoins`, где вызывается `publish(...)`) своя `@Transactional`
 > — наоборот, **нужна**: именно её commit отпускает событие подписчикам.
 >
 > | | Публикатор | Подписчик |
 > |---|---|---|
 > | Где | метод, который зовёт `eventPublisher.publish(...)` | метод с `@ApplicationModuleListener` |
-> | Пример | `RewardService.giveCoins` | `TransactionLogEventListener.onCoinsChanged` |
+> | Пример | `CoinService.giveCoins` | `TransactionLogEventListener.onCoinsChanged` |
 > | Своя `@Transactional` | ✅ нужна | ❌ обычная нельзя (только `REQUIRES_NEW`/`NOT_SUPPORTED`) |
 
 ### 3.6. События с особым смыслом
@@ -213,10 +213,19 @@ eventPublisher.publish(new SomeEvent(...));
 
 ### Шаг 1. Заведи событие в коде
 - Добавь значение в `EventType` (если такого ещё нет).
-- Создай класс `SomeEvent extends DomainEvent` в `core/event/`, конструктор
-  заполняет `type`, `actorId/targetId/scopeType/scopeId` и кладёт данные в `payload`.
+- Создай класс `SomeEvent extends DomainEvent` в
+  `core/modules/domainEvent/events/` — это ядро событий; там живут сами факты
+  (публикаторы из разных модулей видят их, не завися от слайса подписчиков).
+  Конструктор заполняет `type`, `actorId/targetId/scopeType/scopeId` и кладёт
+  данные в `payload`.
 - **Зарегистрируй** его в `@JsonSubTypes` у `DomainEvent` (список известных
-  событий). Без этого событие не десериализуется при replay из `event_publication`.
+  событий) и добавь **`@JsonCreator`-конструктор** с полями конверта: Jackson не
+  наследует creator базового класса, без своего конструктора событие не
+  десериализуется при replay из `event_publication`. Числовые поля payload в
+  вычисляемых геттерах читай через `longPayload(...)` — при replay Jackson отдаёт
+  их как `Integer`.
+- Добавь событие в `DomainEventSerializationTest` (round-trip по базовому типу +
+  лимит 255 символов колонки `event_publication.serialized_event`).
 
 ### Шаг 2. Публикуй факт
 «Опубликовать» — это НЕ отправить что-то по сети и НЕ вызвать подписчиков сразу.
@@ -225,10 +234,10 @@ eventPublisher.publish(new SomeEvent(...));
 после успешного завершения транзакции (AFTER_COMMIT).
 
 Поэтому публикуй событие ВНУТРИ той же операции, что меняет состояние, — так
-делает `RewardService`:
+делает `CoinService`:
 ```java
 @Transactional
-public void giveCoins(Long userId, long amount, RewardReason reason, Long relatedEntityId) {
+public void giveCoins(Long userId, long amount, CoinUpdateReason reason, Long relatedEntityId) {
     ChatUser user = getUser(userId);
     user.setCoinBalance(user.getCoinBalance() + amount);      // 1. меняем состояние
     chatUserRepository.save(user);                            // 2. сохраняем в БД
@@ -247,7 +256,7 @@ public void giveCoins(Long userId, long amount, RewardReason reason, Long relate
 Отсюда главная гарантия: **подписчик никогда не сработает для операции, которая
 не докрутилась до конца** — не бывает «уведомления о начислении, а монет не дали».
 
-`DomainEventPublisher` уже инжектится через конструктор (в `RewardService` это
+`DomainEventPublisher` уже инжектится через конструктор (в `CoinService` это
 поле `private final DomainEventPublisher eventPublisher;` + `@RequiredArgsConstructor`).
 Тебе остаётся только вызвать `eventPublisher.publish(new SomeEvent(...))` в том же
 методе, где изменяется состояние.
@@ -274,11 +283,11 @@ public void giveCoins(Long userId, long amount, RewardReason reason, Long relate
 ## 6. Живые примеры из кода (разбор трёх цепочек)
 
 ### Пример А. Монеты: «списали/начислили» → аудит
-1. `RewardService.giveCoins/takeCoins` публикует `CoinsChangedEvent`.
+1. `CoinService.giveCoins/takeCoins` публикует `CoinsChangedEvent`.
 2. `TransactionLogEventListener` (`@ApplicationModuleListener`) ловит его.
 3. Пишет строку в `TransactionLog` (COIN/XP_USER) — это аудит.
-   Почему не синхронно в RewardService? Чтобы RewardService не знал про
-   TransactionLog и любое новое последствие добавлялось подписчиком.
+   Почему не синхронно в `CoinService`? Чтобы `CoinService` не знал про
+   `TransactionLog` и любое новое последствие добавлялось подписчиком.
 
 ### Пример Б. Заявка: «решена» → уведомление заявителя + обновление профиля
 1. `ApplicationService` после `handler.handle()` + save публикует
@@ -288,30 +297,32 @@ public void giveCoins(Long userId, long amount, RewardReason reason, Long relate
    по `characterId` находит персонажа, сохраняет `Notification`
    (в `data` — applicationType/applicationStatus) и шлёт WS-пуш в
    `/user/{username}/queue/notifications`.
-3. `CharacterUpdatedListener` ловит второй: WS-пуш в
+3. `CharacterUpdatedEventListener` ловит второй: WS-пуш в
    `/user/queue/character-updated` → фронт перезагружает профиль
    (`CurrentChatUserService.refresh()`), см. architecture/reactive-character-updates.md.
 
 ### Пример В. Выборы: «закрылись» → назначение + уведомление всем
-1. `ElectionFacade.closeElection` (Слой 2) закрывает голосование через
-   `PollService` (Слой 3) — всё в одной транзакции.
-2. `PollResultDispatcher.dispatch(closed)` выбирает `ElectionResultHandlerAdapter`
-   по `PollType.ELECTION` (Слой 4) — тот назначает губернатора в `LocationPost`
-   и **сам** публикует `PollClosedEvent`.
-3. Фасад публикует `ElectionClosedEvent` (с именем победителя).
+1. `ElectionService.closeElection` закрывает голосование через `PollService` —
+   всё в одной транзакции.
+2. `PollResultDispatcher.dispatch(closed)` выбирает `PollResultHandler` по
+   `PollType.ELECTION` — `ElectionResult` назначает губернатора (в мэрии
+   `LocationUser.systemRole = GOVERNOR`) и **сам** публикует `PollClosedEvent`.
+3. `ElectionService` публикует `ElectionClosedEvent` (с именем победителя).
 4. `NotificationEventListener.onElectionClosed` ловит `ElectionClosedEvent`,
    рассылает «Губернатором избран ...» всем жителям района + WS-пуш.
 
 Обрати внимание: у `closeElection` два «выхода» (два события), и каждое
-обрабатывает свой подписчик. Фасад не вызывает NotificationService напрямую —
+обрабатывает свой подписчик. Публикатор не вызывает `NotificationService` напрямую —
 это и есть суть рефакторинга: **Слой 3 публикует, Слой 4 слушает.**
 
 ---
 
 ## 7. Чек-лист DoD (что должен сделать бэкенд, чтобы сценарий считался готовым)
 
-1. **Событие зарегистрировано** в `@JsonSubTypes` у `DomainEvent` и значение
-   добавлено в `EventType` (иначе replay сломается).
+1. **Событие зарегистрировано**: значение в `EventType`, класс в
+   `core/modules/domainEvent/events/`, подтип в `@JsonSubTypes` и собственный
+   `@JsonCreator` (иначе replay сломается), факт добавлен в
+   `DomainEventSerializationTest`.
 2. **Публикация в той же транзакции**, что и бизнес-изменение.
 3. **Подписчик** с `@ApplicationModuleListener`; у него **нет** собственной
    `@Transactional`, кроме `REQUIRES_NEW`/`NOT_SUPPORTED`.
@@ -320,13 +331,16 @@ public void giveCoins(Long userId, long amount, RewardReason reason, Long relate
    сервиса, а не событие. Иначе обязательный эффект можно случайно превратить
    в «может быть, случится».
 5. **Границы модулей**: публикатор и подписчик не импортируют друг друга
-   напрямую, общаются только через событие в `core.event`.
-6. **Два теста**:
+   напрямую, общаются только через событие в `core.modules.domainEvent`
+   (см. architecture/event/domain-event-module-layers.md).
+6. **Тесты**:
    - тест факта публикации (`@RecordApplicationEvents`) — сервис действительно
      опубликовал событие с верным payload;
    - тест сквозного пути (Modulith `Scenario`) — подписчик реально отработал
      и дал эффект (запись в БД / WS-пуш). Без него легко получить ложно-зелёный
-     тест на подписчике, который никогда не вызывается.
+     тест на подписчике, который никогда не вызывается;
+   - `DomainEventSerializationTest` — событие переживает JSON round-trip по
+     базовому типу и влезает в `varchar(255)`.
 
 ---
 

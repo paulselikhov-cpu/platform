@@ -108,8 +108,12 @@
 | Метод фронта | Где вызывается | Ручка на бэке | Что делает |
 |---|---|---|---|
 | `workService.workAsDvornik()` | `features/economy/work-page/work-page.ts` | `POST /api/work/dvornik`, `WorkController.workAsDvornik` | Тап-фарм работы «дворник» (награда монетами/XP, кулдаун). |
-| `applicationService.buyFirstLocation(payload)`, `ApplicationController.buyFirstLocation` | Подать заявку на покупку первой локации (для «бомжей»). |
-| `applicationService.getMyApplications()` | не используется в UI | `GET /api/applications/my`, `ApplicationController.getMyApplications` | Список своих заявок. |
+| `applicationService.registerPassport()` | `features/room-feature/reception/reception-menu/reception-menu.ts` | `POST /api/applications/register-passport`, `ApplicationController.registerPassport` | Подать заявку на паспорт (создаётся PENDING; дубль документа и вторая незакрытая заявка того же типа отклоняются). |
+| `applicationService.registerWorkLicence()` | `features/room-feature/reception/reception-menu/reception-menu.ts` | `POST /api/applications/register-work-licence`, `ApplicationController.registerWorkLicence` | Подать заявку на рабочую лицензию (PENDING). |
+| `applicationService.approveApplication(id)` | `shared/menu/employee-applications-menu/employee-applications-menu.ts` | `POST /api/applications/{id}/approve`, `ApplicationController.approveApplication` | Модерация: сотрудник мэрии (ADMIN/MODERATOR, иначе 403) одобряет заявку — стратегия выдаёт паспорт/лицензию. |
+| `applicationService.rejectApplication(id, reason?)` | `shared/menu/employee-applications-menu/employee-applications-menu.ts` | `POST /api/applications/{id}/reject?reason=`, `ApplicationController.rejectApplication` | Модерация: отклонить заявку с причиной (по умолчанию «Отклонено по решению сотрудника мэрии»). |
+| `applicationService.getMyApplications()` | не используется в UI | `GET /api/applications/my`, `ApplicationController.getMyApplications` | Список своих заявок (DTO `ApplicationSummary`). |
+| `applicationService.getAllApplications()` | `shared/menu/employee-applications-menu/employee-applications-menu.ts` | `GET /api/applications/all`, `ApplicationController.getAllApplications` | Все заявки с именами заявителей (DTO `ApplicationView`); гейта роли нет — отдаётся любому авторизованному. |
 
 ### 1.10. Выборы
 

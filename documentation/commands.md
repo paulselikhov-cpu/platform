@@ -21,6 +21,36 @@ PID=$!; sleep 30; kill $PID 2>/dev/null; wait $PID 2>/dev/null
 
 # Запуск конкретного теста
 cd babich-app && mvn test -Dtest=TestClassName
+
+# Прогон тестов без вайпа dev-БД: ddl-auto по умолчанию create — стирает таблицы.
+# @SpringBootTest-тесты наследуют настройки application.yaml, поэтому переопределяем:
+cd babich-app && SPRING_JPA_HIBERNATE_DDL_AUTO=update mvn test -Dtest=TestClassName
+
+# Несколько тестов сразу (список в кавычках)
+cd babich-app && SPRING_JPA_HIBERNATE_DDL_AUTO=update mvn test -Dtest='TestA,TestB,TestC'
+
+# После переноса/переименования классов — только чистая сборка:
+# инкрементальная компиляция оставляет старые .class в target/classes, и Spring
+# падает на старте с ConflictingBeanDefinitionException (конфликт имён бинов,
+# например applicationMessages из старого и нового пакета).
+cd babich-app && mvn clean test -Dtest=TestClassName
+```
+
+### Запуск на другом порту без вайпа dev-БД
+
+В `application.yaml` стоит `ddl-auto: create` — каждый старт **пересоздаёт таблицы** и стирает
+данные. Если нужно просто проверить сборку/логику поверх существующих данных (или рядом уже
+запущен бэкенд пользователя на 8080), переопределяем оба свойства через env:
+
+```bash
+cd babich-app && SERVER_PORT=8090 SPRING_JPA_HIBERNATE_DDL_AUTO=update mvn spring-boot:run
+
+# в фоне, с логом в файл
+cd babich-app && nohup env SERVER_PORT=8090 SPRING_JPA_HIBERNATE_DDL_AUTO=update mvn spring-boot:run > /d/babich/app-8090.log 2>&1 &
+
+# погасить только свой инстанс (PID java-процесса слушающего 8090)
+netstat -ano | grep ':8090 '
+taskkill //PID <PID> //F
 ```
 
 ## Frontend (platform-ui — Angular)
@@ -110,6 +140,15 @@ git status
 
 # Добавить все изменения (только add, пушить нельзя — правило проекта)
 git add -A
+```
+
+## Особенности окружения (Windows / git bash)
+
+```bash
+# `node` в этом git bash заалиасен на `winpty node.exe`, поэтому при перенаправлении
+# вывода (`node script.cjs > out.log`) падает с "stdout is not a tty" и ничего не выполняет.
+# Для скриптов/сборок, чей stdout уходит в файл или в pipe, вызывать node напрямую:
+"/c/Program Files/nodejs/node.exe" script.cjs > out.log 2>&1
 ```
 
 ## Процессы и порты

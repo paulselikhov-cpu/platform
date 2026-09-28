@@ -15,6 +15,7 @@
 | Задача | Статус |
 |--------|--------|
 | Реформа модели локаций (LocationUser, упразднение LocationPost, авто-членство удалено) | ✅ Реализовано (см. architecture/location/location-members-reform-plan.md) |
+| Replay доменных событий из `event_publication` (JSON-десериализация Jackson) | ✅ Исправлено (см. architecture/event/domain-event-module-layers.md §6) |
 | R2: STOMP Broker Relay (RabbitMQ/Artemis) вместо SimpleBroker | ❌ Не начат |
 | R3: Presence/online-счётчики/unread → Redis | ❌ Не начат |
 | R4: прод-конфиг (show-sql, ddl-auto → миграции, пул HikariCP, индексы) | ❌ Не начат |

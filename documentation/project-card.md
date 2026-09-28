@@ -25,6 +25,7 @@
 |------|------|
 | Event-driven архитектура (концепция и паттерны) | [`architecture/event/babichchat-event-architecture.md`](architecture/event/babichchat-event-architecture.md) |
 | Как пользоваться event-архитектурой (инструкция) | [`architecture/event/how-to-use-event-architecture.md`](architecture/event/how-to-use-event-architecture.md) — ментальная модель, рецепт нового сценария, DoD |
+| Доменные события: ядро шины и подписчики | [`architecture/event/domain-event-module-layers.md`](architecture/event/domain-event-module-layers.md) |
 | Read status / seen-by | [`architecture/chat/read-status.md`](architecture/chat/read-status.md) |
 | Лавина планировщиков при clock leap (fixedRate → fixedDelay) | [`architecture/chat/scheduler-clock-leap-fixed-rate-avalanche.md`](architecture/chat/scheduler-clock-leap-fixed-rate-avalanche.md) |
 | RoomView / RoomFeature — фичи комнат | [`architecture/chat/room-feature.md`](architecture/chat/room-feature.md) |
@@ -32,8 +33,10 @@
 | Presence-архитектура | [`architecture/presence/online-tracking.md`](architecture/presence/online-tracking.md) |
 | Ранняя подписка на WS-топики | [`architecture/websocket/early-topic-subscription.md`](architecture/websocket/early-topic-subscription.md) |
 | Stomp/Chat сервисы | [`architecture/websocket/stomp-and-chat-service.md`](architecture/websocket/stomp-and-chat-service.md) |
+| Отказ WS-CONNECT по аутентификации (401 в STOMP-ERROR) | [`architecture/websocket/ws-connect-auth-failure.md`](architecture/websocket/ws-connect-auth-failure.md) |
 | Целевой масштаб 100k+ и Redis; этапы R1–R5 | [`architecture/realtime/scale-targets-and-redis.md`](architecture/realtime/scale-targets-and-redis.md) |
 | Районы и системные локации, LocationPost | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
 | Реактивное обновление персонажа (character-updated push) | [`architecture/reactive-character-updates.md`](architecture/reactive-character-updates.md) |
+| Модуль заявок: ядро процесса и исполнители | [`architecture/application/application-module-layers.md`](architecture/application/application-module-layers.md) |
 | Четырёхслойная архитектура election-сценария | [`scenarios/2. the-first-election.md`](scenarios/2.%20the-first-election.md) (таблицы Layers 1–4) |
 | Темизация UI: 4 темы, скин через design tokens | [`architecture/ui/theming.md`](architecture/ui/theming.md) |
