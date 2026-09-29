@@ -30,6 +30,8 @@
 | Лавина планировщиков при clock leap (fixedRate → fixedDelay) | [`architecture/chat/scheduler-clock-leap-fixed-rate-avalanche.md`](architecture/chat/scheduler-clock-leap-fixed-rate-avalanche.md) |
 | RoomView / RoomFeature — фичи комнат | [`architecture/chat/room-feature.md`](architecture/chat/room-feature.md) |
 | Синхронизация LocationUsersMenu | [`architecture/presence/location-users-menu-sync.md`](architecture/presence/location-users-menu-sync.md) |
+| Слайс «чат комнаты» (сообщения, непрочитанное, присутствие) | [`architecture/chat/chat-room-module-layers.md`](architecture/chat/chat-room-module-layers.md) |
+
 | Presence-архитектура | [`architecture/presence/online-tracking.md`](architecture/presence/online-tracking.md) |
 | Ранняя подписка на WS-топики | [`architecture/websocket/early-topic-subscription.md`](architecture/websocket/early-topic-subscription.md) |
 | Stomp/Chat сервисы | [`architecture/websocket/stomp-and-chat-service.md`](architecture/websocket/stomp-and-chat-service.md) |
@@ -38,5 +40,5 @@
 | Районы и системные локации, LocationPost | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
 | Реактивное обновление персонажа (character-updated push) | [`architecture/reactive-character-updates.md`](architecture/reactive-character-updates.md) |
 | Модуль заявок: ядро процесса и исполнители | [`architecture/application/application-module-layers.md`](architecture/application/application-module-layers.md) |
-| Четырёхслойная архитектура election-сценария | [`scenarios/2. the-first-election.md`](scenarios/2.%20the-first-election.md) (таблицы Layers 1–4) |
+| архитектура election-сценария | [`scenarios/2. the-first-election.md`](scenarios/2.%20the-first-election.md) (таблицы Layers 1–4) |
 | Темизация UI: 4 темы, скин через design tokens | [`architecture/ui/theming.md`](architecture/ui/theming.md) |

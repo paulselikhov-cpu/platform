@@ -10,30 +10,28 @@
 com/platform/
 ├── auth/                       # User, JWT, Spring Security (не игровая логика)
 └── chat/
-    ├── base/                   # базовые игровые сущности: entity/dto/repository/service
+    ├── config/                 # конфигурация, DataInitializer
+    ├── domain/                 # 1: онтология мира (фундамент)
     │   ├── chatUser/           # ChatUser (персонаж), EnergyService, ChatUserService
     │   ├── district/           # District, DistrictSettings
-    │   ├── location/           # Location, LocationUser (бывший LocationPost), шаблоны локаций
-    │   └── room/               # Room, статусы прочтения
-    ├── core/                   # ядро: инфраструктура, общие процессы, контракты
-    │   ├── config/             # WebSocketConfig, JwtChannelInterceptor, DataInitializer
-    │   └── modules/
-    │       ├── application/    # ядро процесса заявки
-    │       │                   # (см. architecture/application/application-module-layers.md)
-    │       ├── domainEvent/    # ядро событий: DomainEvent, EventType, ScopeType,
-    │       │                   # events/ (7 фактов), DomainEventPublisher
-    │       │                   # (см. architecture/event/domain-event-module-layers.md)
-    │       ├── message/        # сообщения чата: entity/dto/controller/service
-    │       ├── notification/   # Notification: хранение + REST
-    │       ├── onlineSession/  # онлайн-сессии (presence)
-    │       ├── poll/           # Poll/PollCandidate/PollVote, PollResultDispatcher
-    │       ├── scheduledCheck/ # SchedulerGateway + ScheduledCheck
-    │       ├── transactionLog/ # TransactionLog + enum CoinUpdateReason (аудит)
-    │       └── webSocket/      # STOMP-инфраструктура и подписки
-    └── modules/                # фичи поверх ядра
+    │   ├── location/           # Location, LocationUser, шаблоны локаций, порты
+    │   └── room/               # Room, статусы прочтения, порты чистки
+    ├── engines/                # 2: универсальные платформенные движки
+    │   ├── application/        # ядро процесса заявки (Application, HandlerRegistry)
+    │   │                       # (см. architecture/application/application-module-layers.md)
+    │   ├── chatRoom/           # движок комнат чата: сообщения, непрочитанное, присутствие, STOMP
+    │   │                       # (см. architecture/chat/chat-room-module-layers.md)
+    │   ├── domainEvent/        # ядро событий: DomainEvent, EventType, ScopeType, events/, DomainEventPublisher
+    │   │                       # (см. architecture/event/domain-event-module-layers.md)
+    │   ├── economy/            # CoinService — единая точка изменений монет/XP + адаптер оплаты локаций
+    │   ├── notification/       # Notification: хранение + REST
+    │   ├── poll/               # Poll/PollCandidate/PollVote, PollResultDispatcher
+    │   ├── scheduledCheck/     # SchedulerGateway + ScheduledCheck (таймеры, тики)
+    │   ├── transactionLog/     # TransactionLog + enum CoinUpdateReason (аудит)
+    │   └── webSocket/          # инфраструктура STOMP/WS (WebSocketConfig, JwtChannelInterceptor)
+    └── features/               # 3: прикладные сценарии и игровые механики
         ├── application/        # исполнители заявок (стратегии) + REST мэрии
-        ├── coin/               # CoinService — единая точка изменений монет/XP
-        ├── domainEvent/        # подписчики на события — Слой 4 «доставка»
+        ├── domainEvent/        # подписчики на события — доставка (нотификации, WS, аудит)
         ├── gang/               # Gang/GangMember (задел)
         ├── governorElection/   # ElectionService, ElectionResult + REST выборов
         └── work/               # WorkService (тап-фарм)
@@ -55,11 +53,11 @@ com/platform/
 - **Уровень**: `PersonLevel` — enum с XP-порогами (`PersonLevel.fromXp`),
   сервис `PersonLevelService` (гейты: `hasMinLevel`, порог следующего уровня для UI).
   Отдельной таблицы уровней нет.
-- **Заявки**: ядро процесса — `chat.core.modules.application` (`Application`,
+- **Заявки**: ядро процесса — `chat.engines.application` (`Application`,
   `ApplicationType`, `ApplicationStatus`, порт `ApplicationHandler`, решение
   `ApplicationDecision`, реестр `ApplicationHandlerRegistry`, команды
   `ApplicationService`, чтения `ApplicationQueryService`, DTO `ApplicationSummary`);
-  исполнители — `chat.modules.application` (стратегии `RegisterPassport`,
+  исполнители — `chat.features.application` (стратегии `RegisterPassport`,
   `RegisterWorkLicence` выдают документ через `ChatUserService`).
   Решение принимает сотрудник мэрии (модерация), не автоодобрение.
   При resolve публикуются `ApplicationResolvedEvent` (ядро) и

@@ -8,11 +8,11 @@
 
 | Слайс | Пакет | Роль |
 |---|---|---|
-| Ядро процесса | `com.platform.chat.core.modules.application` | Жизненный цикл заявки: `Application`, `ApplicationType`, `ApplicationStatus`, порт `ApplicationHandler`, решение `ApplicationDecision`, реестр `ApplicationHandlerRegistry`, команды `ApplicationService`, чтения `ApplicationQueryService`, DTO `ApplicationSummary`, `ApplicationMessages` (i18n) |
-| Исполнители + REST | `com.platform.chat.modules.application` | Стратегии `RegisterPassport` / `RegisterWorkLicence` (эффект на `ChatUser` через `ChatUserService`), подача `ApplicationSubmissionService`, `ApplicationController`, DTO модерации `ApplicationView` + `ApplicationViewAssembler` (имена заявителей — через публичный API `auth::userService`, без доступа в чужой репозиторий) |
+| Ядро процесса | `com.platform.chat.engines.application` | Жизненный цикл заявки: `Application`, `ApplicationType`, `ApplicationStatus`, порт `ApplicationHandler`, решение `ApplicationDecision`, реестр `ApplicationHandlerRegistry`, команды `ApplicationService`, чтения `ApplicationQueryService`, DTO `ApplicationSummary`, `ApplicationMessages` (i18n) |
+| Исполнители + REST | `com.platform.chat.features.application` | Стратегии `RegisterPassport` / `RegisterWorkLicence` (эффект на `ChatUser` через `ChatUserService`), подача `ApplicationSubmissionService`, `ApplicationController`, DTO модерации `ApplicationView` + `ApplicationViewAssembler` (имена заявителей — через публичный API `auth::userService`, без доступа в чужой репозиторий) |
 
-Зависимость строго однонаправленная: `chat.modules.application → chat.core.modules.application`.
-Ядро не знает ни про `chat.base.chatUser`, ни про `auth`, ни про web.
+Зависимость строго однонаправленная: `chat.features.application → chat.engines.application`.
+Ядро не знает ни про `chat.domain.chatUser`, ни про `auth`, ни про web.
 
 Причина разделения: до рефакторинга `ApplicationType` жил в модуле-исполнителе, а
 entity ядра на него ссылалась — это давало направленный цикл между двумя слайсами.

@@ -159,14 +159,14 @@ eventPublisher.publish(new SomeEvent(...));
 [Фронтенд: игрок нажал кнопку]
    │  REST-запрос (или WS-команда)
    ▼
-[Controller] ─── Слой "вход", тонкий, только парсит запрос
+[Controller] ─── "вход", тонкий, только парсит запрос
    │
    ▼
-[Facade] ─── Слой 2, "сценарий": собирает шаги в один вызов, понятный клиенту
+[Facade] ─── "сценарий": собирает шаги в один вызов, понятный клиенту
    │           (ElectionFacade.initiateElection / closeElection / ...)
    │
    ▼
-[Service] ─── Слой 3, "бизнес-логика": валидация + изменение состояния в БД
+[Service] ─── "бизнес-логика": валидация + изменение состояния в БД
    │
    │  (в той же транзакции)
    ▼
@@ -176,7 +176,7 @@ eventPublisher.publish(new SomeEvent(...));
 [event_publication + AFTER_COMMIT]  ─── событие надёжно доставлено ПОСЛЕ коммита
    │
    ▼
-[Подписчики @ApplicationModuleListener] ─── Слой 4, независимые реакции:
+[Подписчики @ApplicationModuleListener] ─── независимые реакции:
    ├─ NotificationEventListener  → сохранить Notification + WS-пуш
    ├─ TransactionLogEventListener→ записать аудит
    ├─ (будущее) QuestService     → продвинуть квест
@@ -311,9 +311,6 @@ public void giveCoins(Long userId, long amount, CoinUpdateReason reason, Long re
 4. `NotificationEventListener.onElectionClosed` ловит `ElectionClosedEvent`,
    рассылает «Губернатором избран ...» всем жителям района + WS-пуш.
 
-Обрати внимание: у `closeElection` два «выхода» (два события), и каждое
-обрабатывает свой подписчик. Публикатор не вызывает `NotificationService` напрямую —
-это и есть суть рефакторинга: **Слой 3 публикует, Слой 4 слушает.**
 
 ---
 

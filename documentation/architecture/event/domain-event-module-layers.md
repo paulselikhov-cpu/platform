@@ -9,25 +9,26 @@
 
 | Слайс | Пакет | Роль |
 |---|---|---|
-| Ядро событий | `com.platform.chat.core.modules.domainEvent` | Конверт `DomainEvent`, словарь фактов `EventType`, `enums/ScopeType`, **конкретные события `events/*`** (7 фактов), порт публикации `service/DomainEventPublisher` |
-| Реакции (Слой 4 «Доставка») | `com.platform.chat.modules.domainEvent` | Подписчики `listeners/*`: `NotificationEventListener`, `CharacterUpdatedEventListener`, `TransactionLogEventListener` |
+| Ядро событий | `com.platform.chat.engines.domainEvent` | Конверт `DomainEvent`, словарь фактов `EventType`, `enums/ScopeType`, **конкретные события `events/*`** (7 фактов), порт публикации `service/DomainEventPublisher` |
+| Реакции | `com.platform.chat.features.domainEvent` | Подписчики `listeners/*`: `NotificationEventListener`, `CharacterUpdatedEventListener`, `TransactionLogEventListener` |
 
-Зависимость строго однонаправленная: `chat.modules.domainEvent → chat.core.modules.domainEvent`.
-Ядро событий не знает ни про подписчиков, ни про `chat.base.chatUser`, ни про web.
+Зависимость строго однонаправленная: `chat.features.domainEvent → chat.engines.domainEvent`.
+Ядро событий не знает ни про подписчиков, ни про `chat.domain.chatUser`, ни про web.
 
 Почему так, а не «события в фич-слайсе подписчиков»:
 
-- события-факты публикуют **ядра процессов** (`core.modules.application`, `core.modules.poll`)
-  и фич-модули (`coin`, `governorElection`). Если бы события лежали в фиче, каждый
+- события-факты публикуют **ядра процессов** (`engines.application`, `engines.poll`)
+  и движки/фичи (`engines.economy`, `features.governorElection`). Если бы события
+  лежали в фиче, каждый
   публикатор тянул бы фич-слайс — направленный цикл «ядро ↔ исполнители»,
   ровно тот дефект, что был с `ApplicationType` в модуле заявок
   (`architecture/application/application-module-layers.md`, § 1);
 - до рефакторинга цикл между слайсами существовал физически: ядро объявляло
-  `allowedDependencies = {"chat.modules.domainEvent"}` (реестр `@JsonSubTypes`
+  `allowedDependencies = {"chat.features.domainEvent"}` (реестр `@JsonSubTypes`
   перечислял классы из фич-пакета), а фич-слайс объявлял зависимость на ядро;
-- теперь `chat.modules.domainEvent` — лист: наружу его не импортирует ни один
+- теперь `chat.features.domainEvent` — лист: наружу его не импортирует ни один
   модуль, поэтому и цикла нет. Ядра процессов зависят только от
-  `chat.core.modules.domainEvent`.
+  `chat.engines.domainEvent`.
 
 ## 2. Что где лежит
 
@@ -80,8 +81,8 @@
 
 | Пакет | `allowedDependencies` | `type` |
 |---|---|---|
-| `chat.core.modules.domainEvent` | `chat.core.modules.transactionLog` (словарь причин) | `OPEN` |
-| `chat.modules.domainEvent` | `chat.base.chatUser`, `chat.core.modules.domainEvent`, `chat.core.modules.notification`, `chat.core.modules.transactionLog` | `OPEN` |
+| `chat.engines.domainEvent` | `chat.engines.transactionLog` (словарь причин) | `OPEN` |
+| `chat.features.domainEvent` | `chat.domain.chatUser`, `chat.engines.domainEvent`, `chat.engines.notification`, `chat.engines.transactionLog` | `OPEN` |
 
 `type = CLOSED` у слайса реакций не выставлен, поэтому тип модуля — `OPEN`:
 закрытый модуль запретил бы обращаться к классам подписчиков извне, а такое
