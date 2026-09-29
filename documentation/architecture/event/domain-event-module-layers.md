@@ -88,8 +88,9 @@
 закрытый модуль запретил бы обращаться к классам подписчиков извне, а такое
 обращение есть у теста `com.platform.notification.listener.NotificationEventListenerTest`
 (он лежит вне дерева `com.platform.chat.*`). Тест границ `ModuleBoundaryTest`
-проверяет `detectViolations()`: незаявленная зависимость или **новый** цикл
-валят тест (фильтруется только известный предсуществующий цикл `chat ↔ economy`).
+проверяет `detectViolations()`: незаявленная зависимость или любой цикл валит
+тест — исключающих фильтров нет (цикл `chat ↔ economy` устранён), плюс
+два теста читают исходники напрямую (см. `architecture/modules/module-boundaries.md`).
 
 ## 6. Сериализация и replay
 

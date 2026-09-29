@@ -29,6 +29,12 @@ cd babich-app && SPRING_JPA_HIBERNATE_DDL_AUTO=update mvn test -Dtest=TestClassN
 # Несколько тестов сразу (список в кавычках)
 cd babich-app && SPRING_JPA_HIBERNATE_DDL_AUTO=update mvn test -Dtest='TestA,TestB,TestC'
 
+# ПОЛНЫЙ прогон в изолированной БД — предпочтительнее варианта с ddl-auto=update:
+# там тестовые строки оседают в dev-БД, а здесь chatdb вообще не трогается
+# (ddl-auto=create пересоздаёт схему разовой chatdb_test).
+docker exec babich-postgres psql -U chatuser -d postgres -c "CREATE DATABASE chatdb_test"
+cd babich-app && SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/chatdb_test mvn -o test
+
 # После переноса/переименования классов — только чистая сборка:
 # инкрементальная компиляция оставляет старые .class в target/classes, и Spring
 # падает на старте с ConflictingBeanDefinitionException (конфликт имён бинов,

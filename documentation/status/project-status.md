@@ -19,3 +19,11 @@
 | R2: STOMP Broker Relay (RabbitMQ/Artemis) вместо SimpleBroker | ❌ Не начат |
 | R3: Presence/online-счётчики/unread → Redis | ❌ Не начат |
 | R4: прод-конфиг (show-sql, ddl-auto → миграции, пул HikariCP, индексы) | ❌ Не начат |
+
+### Безопасность и границы слоёв
+
+| Задача | Статус |
+|--------|--------|
+| IDOR: `characterId`/`userId` из query-параметров проверяются на владельца (`ChatUserService.assertCharacterOwnedBy` / `assertAccountIsSelfOrAdmin`), закрытие выборов — только ADMIN | ✅ Реализовано |
+| Границы слоёв chat: устранён цикл `engines.poll ↔ features.governorElection` (константа → `PollCheckType`), `ModuleBoundaryTest` без исключающих фильтров + тесты на исходниках | ✅ Реализовано (см. `architecture/modules/module-boundaries.md`) |
+| JWT-секрет и логирование: `jwt.secret` из `${JWT_SECRET}`, в лог не попадает кусок токена | ✅ Реализовано |

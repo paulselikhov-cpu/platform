@@ -43,11 +43,11 @@
 
 | Метод фронта | Где вызывается | Ручка на бэке | Что делает |
 |---|---|---|---|
-| `chatUserService.getChatUserByUserIdAndDistrict(userId, districtId)` | `features/district-select/district-select.ts`; `services/current-chat-user.service.ts` | `GET /api/chat/users/{userId}/characters?districtId=`, `ChatUserController.getChatUserByUserIdAndDistrict` | Персонаж юзера в конкретном районе; `null`, если ещё не создан. |
+| `chatUserService.getChatUserByUserIdAndDistrict(userId, districtId)` | `features/district-select/district-select.ts`; `services/current-chat-user.service.ts` | `GET /api/chat/users/{userId}/characters?districtId=`, `ChatUserController.getChatUserByUserIdAndDistrict` | Персонаж юзера в конкретном районе; `null`, если ещё не создан. `userId` из запроса обязан быть своим (или вызывающий — ADMIN), иначе 403 — ручка онбординга, персонажа ещё может не быть. |
 | `chatUserService.getChatUserByUserId(userId)` | `features/sidebar/sidebar/sidebar.ts` | `GET /api/chat/users/by-user/{userId}`, `ChatUserController.getChatUserByUserId` | Первый найденный персонаж юзера (обратная совместимость). |
 | `chatUserService.getAllChatUsersByUserId(userId)` | не используется в UI | `GET /api/chat/users/{userId}/characters/all`, `ChatUserController.getAllChatUsersByUserId` | Все персонажи юзера. |
 | `chatUserService.getChatUserById(id)` | не используется в UI | `GET /api/chat/users/{id}`, `ChatUserController.getChatUserById` | Персонаж по PK. |
-| `chatUserService.createChatUser(userId, req)` | `services/current-chat-user.service.ts` (из `features/character-create/character-create.ts`) | `POST /api/chat/users/{userId}/characters`, `ChatUserController.createChatUser` | Создать персонажа в районе и назначить текущим. |
+| `chatUserService.createChatUser(userId, req)` | `services/current-chat-user.service.ts` (из `features/character-create/character-create.ts`) | `POST /api/chat/users/{userId}/characters`, `ChatUserController.createChatUser` | Создать персонажа в районе и назначить текущим. `userId` — свой аккаунт или ADMIN (иначе 403). |
 | `chatUserService.getChatUserLevel(userId)` | `services/current-chat-user.service.ts` (`loadUserLevel`) | `GET /api/chat/users/{id}/level`, `ChatUserController.getChatUserLevelById` | Текущий уровень персонажа. |
 | `chatUserService.getXpThreshold(characterId)` | `services/current-chat-user.service.ts` | `GET /api/chat/users/{id}/xp-threshold`, `ChatUserController.getChatUserXpThreshold` | Порог XP следующего уровня (для прогресс-бара). |
 | `chatUserService.getDistrictCharacters(districtId)` | `shared/components/district-users-table/district-users-table.ts` | `GET /api/chat/users/district/{districtId}`, `ChatUserController.listDistrictCharacters` | Список персонажей района (админская таблица, роль ADMIN). |
@@ -82,8 +82,8 @@
 | Метод фронта | Где вызывается | Ручка на бэке | Что делает |
 |---|---|---|---|
 | `locationUsersService.getLocationUsers(locationId, params)` | `features/location/room-view/location-users-menu/location-users-menu.ts` | `GET /api/location-users/{locationId}/users?page&size&filter&query`, `LocationUsersController.getLocationUsers` | Paged-список участников локации (поиск + фильтр по присутствию). |
-| `locationUsersService.getUnreadCounts(locationIds, characterId)` | `features/sidebar/service/unread-tracking-sidebar.service.ts` | `GET /api/location-users/unread-counts?locationIds&characterId`, `LocationUsersController.getUnreadCounts` | Суммарные непрочитанные по локациям (бейджи сайдбара). |
-| `locationUsersService.getUnreadSummary(locationId, characterId)` | `features/sidebar/service/unread-tracking-sidebar.service.ts` (`loadRoomBreakdown`) | `GET /api/location-users/{locationId}/unread?characterId`, `LocationUsersController.getUnreadSummary` | Разбивка непрочитанных по комнатам локации. |
+| `locationUsersService.getUnreadCounts(locationIds, characterId)` | `features/sidebar/service/unread-tracking-sidebar.service.ts` | `GET /api/location-users/unread-counts?locationIds&characterId`, `LocationUsersController` → `RoomStateController.getUnreadCounts` | Суммарные непрочитанные по локациям (бейджи сайдбара); `characterId` — только свой, иначе 403. |
+| `locationUsersService.getUnreadSummary(locationId, characterId)` | `features/sidebar/service/unread-tracking-sidebar.service.ts` (`loadRoomBreakdown`) | `GET /api/location-users/{locationId}/unread?characterId`, `LocationUsersController` → `RoomStateController.getUnreadSummary` | Разбивка непрочитанных по комнатам локации; `characterId` — только свой, иначе 403. |
 | `locationUsersService.getOnlineCount(locationId)` | помечен `@not_used` | `GET /api/location-users/{locationId}/online-count`, `LocationUsersController.getOnlineCount` | Число онлайн в локации (не используется, см. WS). |
 | `locationUsersService.getOnlineCharacterIds(locationId)` | помечен `@not_used` | `GET /api/location-users/{locationId}/online-ids`, `LocationUsersController.getOnlineCharacterIds` | Список онлайн-персонажей локации (не используется, см. WS). |
 
@@ -93,7 +93,7 @@
 
 | Метод фронта | Где вызывается | Ручка на бэке | Что делает |
 |---|---|---|---|
-| `messageService.getMessageHistory(roomId, characterId, page, size)` | `features/chat/chat-area/services/chat-room-history.service.ts` | `GET /api/messages/room/{roomId}?page&size&characterId`, `MessageController.getHistory` | История сообщений комнаты с пагинацией (+ помечает прочитанным). |
+| `messageService.getMessageHistory(roomId, characterId, page, size)` | `features/chat/chat-area/services/chat-room-history.service.ts` | `GET /api/messages/room/{roomId}?page&size&characterId`, `MessageController.getHistory` | История сообщений комнаты с пагинацией (+ помечает прочитанным; `characterId` — только свой, иначе 403). |
 | `messageService.deleteMessage(messageId)` | `features/chat/chat-area/services/chat-messages.service.ts` (`deleteSingle`) | `DELETE /api/messages/{id}`, `MessageController.deleteMessage` | Удалить одно сообщение (soft delete). |
 | `messageService.deleteMessages(messageIds)` | `features/chat/chat-area/services/chat-messages.service.ts` (`deleteSelected`) | `DELETE /api/messages/batch`, `MessageController.deleteMessages` | Удалить несколько сообщений разом. |
 
@@ -123,7 +123,7 @@
 | `electionService.initiate(districtId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/initiate?districtId=`, `ElectionController.initiate` | Шаг 1 — начать выборы; инициатор — первый кандидат (гейт уровня 3). |
 | `electionService.join(pollId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/join`, `ElectionController.join` | Шаг 2 — стать кандидатом в идущих выборах. |
 | `electionService.vote(pollId, candidateId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/vote?candidateId=`, `ElectionController.vote` | Шаг 3 — проголосовать за кандидата. |
-| `electionService.close(pollId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/close`, `ElectionController.close` | Досрочно завершить выборы, подсчёт голосов + результат. |
+| `electionService.close(pollId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/close`, `ElectionController.close` | Досрочно завершить выборы, подсчёт голосов + результат. Только ADMIN (403 для остальных) — кнопка на фронте видна только админу. |
 | `electionService.getStatus(pollId)` | не используется в UI | `GET /api/elections/{pollId}`, `ElectionController.getStatus` | Статус голосования. |
 | `electionService.getCandidates(pollId)` | не используется в UI | `GET /api/elections/{pollId}/candidates`, `ElectionController.getCandidates` | Список кандидатов. |
 

@@ -40,5 +40,6 @@
 | Районы и системные локации, LocationPost | [`architecture/world/districts-and-public-locations.md`](architecture/world/districts-and-public-locations.md) |
 | Реактивное обновление персонажа (character-updated push) | [`architecture/reactive-character-updates.md`](architecture/reactive-character-updates.md) |
 | Модуль заявок: ядро процесса и исполнители | [`architecture/application/application-module-layers.md`](architecture/application/application-module-layers.md) |
+| Границы модулей: двухплоскостная проверка (байткод Modulith + исходники) | [`architecture/modules/module-boundaries.md`](architecture/modules/module-boundaries.md) |
 | архитектура election-сценария | [`scenarios/2. the-first-election.md`](scenarios/2.%20the-first-election.md) (таблицы Layers 1–4) |
 | Темизация UI: 4 темы, скин через design tokens | [`architecture/ui/theming.md`](architecture/ui/theming.md) |
