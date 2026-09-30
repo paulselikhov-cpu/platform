@@ -29,6 +29,7 @@
 | Read status / seen-by | [`architecture/chat/read-status.md`](architecture/chat/read-status.md) |
 | Лавина планировщиков при clock leap (fixedRate → fixedDelay) | [`architecture/chat/scheduler-clock-leap-fixed-rate-avalanche.md`](architecture/chat/scheduler-clock-leap-fixed-rate-avalanche.md) |
 | RoomView / RoomFeature — фичи комнат | [`architecture/chat/room-feature.md`](architecture/chat/room-feature.md) |
+| Роутинг локации/комнаты (URL как источник истины) и контроль доступа | [`architecture/chat/location-room-routing.md`](architecture/chat/location-room-routing.md) |
 | Синхронизация LocationUsersMenu | [`architecture/presence/location-users-menu-sync.md`](architecture/presence/location-users-menu-sync.md) |
 | Слайс «чат комнаты» (сообщения, непрочитанное, присутствие) | [`architecture/chat/chat-room-module-layers.md`](architecture/chat/chat-room-module-layers.md) |
 

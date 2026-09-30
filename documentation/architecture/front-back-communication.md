@@ -43,9 +43,7 @@
 
 | Метод фронта | Где вызывается | Ручка на бэке | Что делает |
 |---|---|---|---|
-| `chatUserService.getChatUserByUserIdAndDistrict(userId, districtId)` | `features/district-select/district-select.ts`; `services/current-chat-user.service.ts` | `GET /api/chat/users/{userId}/characters?districtId=`, `ChatUserController.getChatUserByUserIdAndDistrict` | Персонаж юзера в конкретном районе; `null`, если ещё не создан. `userId` из запроса обязан быть своим (или вызывающий — ADMIN), иначе 403 — ручка онбординга, персонажа ещё может не быть. |
-| `chatUserService.getChatUserByUserId(userId)` | `features/sidebar/sidebar/sidebar.ts` | `GET /api/chat/users/by-user/{userId}`, `ChatUserController.getChatUserByUserId` | Первый найденный персонаж юзера (обратная совместимость). |
-| `chatUserService.getAllChatUsersByUserId(userId)` | не используется в UI | `GET /api/chat/users/{userId}/characters/all`, `ChatUserController.getAllChatUsersByUserId` | Все персонажи юзера. |
+| `chatUserService.getChatUserByUserIdAndDistrict(userId, districtId)` | `features/district-select/district-select.ts`; `features/sidebar/sidebar/sidebar.ts`; `services/current-chat-user.service.ts` | `GET /api/chat/users/{userId}/characters?districtId=`, `ChatUserController.getChatUserByUserIdAndDistrict` | Персонаж юзера в конкретном районе. **204 No Content**, если персонажа в районе ещё нет — для онбординга это нормальное состояние, а не ошибка (фронт трактует как `null`). `userId` из запроса обязан быть своим (или вызывающий — ADMIN), иначе 403. |
 | `chatUserService.getChatUserById(id)` | не используется в UI | `GET /api/chat/users/{id}`, `ChatUserController.getChatUserById` | Персонаж по PK. |
 | `chatUserService.createChatUser(userId, req)` | `services/current-chat-user.service.ts` (из `features/character-create/character-create.ts`) | `POST /api/chat/users/{userId}/characters`, `ChatUserController.createChatUser` | Создать персонажа в районе и назначить текущим. `userId` — свой аккаунт или ADMIN (иначе 403). |
 | `chatUserService.getChatUserLevel(userId)` | `services/current-chat-user.service.ts` (`loadUserLevel`) | `GET /api/chat/users/{id}/level`, `ChatUserController.getChatUserLevelById` | Текущий уровень персонажа. |
@@ -74,6 +72,7 @@
 | `locationService.createLocation(req)` | `features/location/create-location/create-location.ts` | `POST /api/locations`, `LocationController.createLocation` | Создать локацию из шаблона. |
 | `locationService.joinLocation(inviteCode, characterId)` | `features/location/find-location/find-location.ts` | `POST /api/locations/join/{inviteCode}?characterId=`, `LocationController.joinLocation` | Вступить в локацию по invite-коду. |
 | `locationService.getRooms(locationId)` | `layout/desktop/chat-desktop/chat-desktop.ts` (`loadRooms`) | `GET /api/locations/{locationId}/rooms`, `LocationController.getRooms` | Список комнат локации (открытие локации). |
+| `locationService.getLocation(locationId, characterId)` | `layout/desktop/chat-desktop/chat-desktop.ts` (`loadLocation`, deep-link `/chat/location/:id`) | `GET /api/locations/{locationId}?characterId=`, `LocationController.getLocationById` | Локация по id с проверкой доступа (системная/публичная — всегда; приватная — только member, иначе 403; нет локации — 404). Фронт по 403/404 редиректит на `/chat/error`. |
 | `locationService.leaveLocation(locationId, characterId)` | `features/sidebar/sidebar/sidebar.ts` | `DELETE /api/locations/{locationId}/leave?characterId=`, `LocationController.leaveLocation` | Покинуть локацию. |
 | `locationService.deleteLocation(locationId, characterId)` | `features/sidebar/sidebar/sidebar.ts` | `DELETE /api/locations/{locationId}?characterId=`, `LocationController.deleteLocation` | Удалить локацию (только владелец). |
 
@@ -195,6 +194,7 @@
 
 ## 3. Заметки по выявленному состоянию кода
 
-- Сервис `UserService` (legacy CRUD `/api/users`) и ряд методов (`getDistrictById`, `getStatus`/`getCandidates`, `getMyApplications`, `updateRole`, `getAllChatUsersByUserId`, `getChatUserById`, `getOnlineCount`/`getOnlineCharacterIds`) объявлены на фронте, но в текущем UI не вызываются — помечены «не используется в UI».
+- Сервис `UserService` (legacy CRUD `/api/users`) и ряд методов (`getDistrictById`, `getStatus`/`getCandidates`, `getMyApplications`, `updateRole`, `getChatUserById`, `getOnlineCount`/`getOnlineCharacterIds`) объявлены на фронте, но в текущем UI не вызываются — помечены «не используется в UI».
+- Отсутствие онбординг-сущности отдаётся как **204 No Content**, а не 404: `GET /api/chat/users/{userId}/characters?districtId=` возвращает 204, если персонажа в районе ещё нет (фронт превращает это в `null`). Так «ещё не создан» не путается ни с ошибкой доступа (403), ни с сетевым сбоем.
 - Игровые события (монеты, XP, покупка локации, выборы) доходят до фронта не напрямую, а через механизм **DomainEvent → NotificationEventListener → WS-пуш** в `/user/queue/notifications`.
 - Реализация присутствия в реальном времени идёт в основном через WS (`/topic/location.{id}.presence`, `/topic/locations.presence-counts`); REST-эндпоинты `online-count`/`online-ids` помечены на фронте `@not_used`.

@@ -20,6 +20,12 @@ cd babich-app && mvn spring-boot:run 2>&1 &
 PID=$!; sleep 30; kill $PID 2>/dev/null; wait $PID 2>/dev/null
 
 # Запуск конкретного теста
+# ⚠️ ВНИМАНИЕ: `mvn test` БЕЗ переопределения ddl-auto СТИРАЕТ данные dev-БД chatdb.
+#    @SpringBootTest поднимает контекст с application.yaml (ddl-auto: create) →
+#    Hibernate пересоздаёт схему, data.sql накатывает только сиды
+#    (1 район, 8 системных локаций, шаблоны). Аккаунты, персонажи, локации и
+#    сообщения пользователя после такого прогона НЕ восстанавливаются.
+#    Безопасные варианты — ниже (SPRING_JPA_HIBERNATE_DDL_AUTO=update или chatdb_test).
 cd babich-app && mvn test -Dtest=TestClassName
 
 # Прогон тестов без вайпа dev-БД: ddl-auto по умолчанию create — стирает таблицы.
