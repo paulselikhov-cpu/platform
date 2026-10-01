@@ -107,8 +107,8 @@
 | Метод фронта | Где вызывается | Ручка на бэке | Что делает |
 |---|---|---|---|
 | `workService.workAsDvornik()` | `features/economy/work-page/work-page.ts` | `POST /api/work/dvornik`, `WorkController.workAsDvornik` | Тап-фарм работы «дворник» (награда монетами/XP, кулдаун). |
-| `applicationService.registerPassport()` | `features/room-feature/reception/reception-menu/reception-menu.ts` | `POST /api/applications/register-passport`, `ApplicationController.registerPassport` | Подать заявку на паспорт (создаётся PENDING; дубль документа и вторая незакрытая заявка того же типа отклоняются). |
-| `applicationService.registerWorkLicence()` | `features/room-feature/reception/reception-menu/reception-menu.ts` | `POST /api/applications/register-work-licence`, `ApplicationController.registerWorkLicence` | Подать заявку на рабочую лицензию (PENDING). |
+| `applicationService.registerPassport()` | `features/location-feature/city-hall/views/city-services-view/reception-menu/reception-menu.ts` | `POST /api/applications/register-passport`, `ApplicationController.registerPassport` | Подать заявку на паспорт (создаётся PENDING; дубль документа и вторая незакрытая заявка того же типа отклоняются). |
+| `applicationService.registerWorkLicence()` | `features/location-feature/city-hall/views/city-services-view/reception-menu/reception-menu.ts` | `POST /api/applications/register-work-licence`, `ApplicationController.registerWorkLicence` | Подать заявку на рабочую лицензию (PENDING). |
 | `applicationService.approveApplication(id)` | `shared/menu/employee-applications-menu/employee-applications-menu.ts` | `POST /api/applications/{id}/approve`, `ApplicationController.approveApplication` | Модерация: сотрудник мэрии (ADMIN/MODERATOR, иначе 403) одобряет заявку — стратегия выдаёт паспорт/лицензию. |
 | `applicationService.rejectApplication(id, reason?)` | `shared/menu/employee-applications-menu/employee-applications-menu.ts` | `POST /api/applications/{id}/reject?reason=`, `ApplicationController.rejectApplication` | Модерация: отклонить заявку с причиной (по умолчанию «Отклонено по решению сотрудника мэрии»). |
 | `applicationService.getMyApplications()` | не используется в UI | `GET /api/applications/my`, `ApplicationController.getMyApplications` | Список своих заявок (DTO `ApplicationSummary`). |
@@ -118,11 +118,11 @@
 
 | Метод фронта | Где вызывается | Ручка на бэке | Что делает |
 |---|---|---|---|
-| `electionService.getOverview(districtId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `GET /api/elections/district/{districtId}/overview`, `ElectionController.getOverview` | Состояние выборов района (активные или результат последних) — мини-таблица. |
-| `electionService.initiate(districtId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/initiate?districtId=`, `ElectionController.initiate` | Шаг 1 — начать выборы; инициатор — первый кандидат (гейт уровня 3). |
-| `electionService.join(pollId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/join`, `ElectionController.join` | Шаг 2 — стать кандидатом в идущих выборах. |
-| `electionService.vote(pollId, candidateId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/vote?candidateId=`, `ElectionController.vote` | Шаг 3 — проголосовать за кандидата. |
-| `electionService.close(pollId)` | `features/room-feature/lening-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/close`, `ElectionController.close` | Досрочно завершить выборы, подсчёт голосов + результат. Только ADMIN (403 для остальных) — кнопка на фронте видна только админу. |
+| `electionService.getOverview(districtId)` | `features/location-feature/lenin-square/lenin-square.feature.ts` | `GET /api/elections/district/{districtId}/overview`, `ElectionController.getOverview` | Состояние выборов района (активные или результат последних) — мини-таблица. |
+| `electionService.initiate(districtId)` | `features/location-feature/lenin-square/lenin-square.feature.ts` | `POST /api/elections/initiate?districtId=`, `ElectionController.initiate` | Шаг 1 — начать выборы; инициатор — первый кандидат (гейт уровня 3). |
+| `electionService.join(pollId)` | `features/location-feature/lenin-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/join`, `ElectionController.join` | Шаг 2 — стать кандидатом в идущих выборах. |
+| `electionService.vote(pollId, candidateId)` | `features/location-feature/lenin-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/vote?candidateId=`, `ElectionController.vote` | Шаг 3 — проголосовать за кандидата. |
+| `electionService.close(pollId)` | `features/location-feature/lenin-square/lenin-square.feature.ts` | `POST /api/elections/{pollId}/close`, `ElectionController.close` | Досрочно завершить выборы, подсчёт голосов + результат. Только ADMIN (403 для остальных) — кнопка на фронте видна только админу. |
 | `electionService.getStatus(pollId)` | не используется в UI | `GET /api/elections/{pollId}`, `ElectionController.getStatus` | Статус голосования. |
 | `electionService.getCandidates(pollId)` | не используется в UI | `GET /api/elections/{pollId}/candidates`, `ElectionController.getCandidates` | Список кандидатов. |
 

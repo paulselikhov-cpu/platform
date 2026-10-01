@@ -32,6 +32,13 @@ cd babich-app && mvn test -Dtest=TestClassName
 # @SpringBootTest-тесты наследуют настройки application.yaml, поэтому переопределяем:
 cd babich-app && SPRING_JPA_HIBERNATE_DDL_AUTO=update mvn test -Dtest=TestClassName
 
+# ⚠️ Вариант с ddl-auto=update ломается после изменения enum'ов/состава колонок:
+#    Hibernate не пересобирает существующие CHECK-constraints в chatdb
+#    (например locations_type_check) и INSERT новых значений падает с
+#    DataIntegrityViolation / "violates check constraint".
+#    В таком случае — прогон в изолированной БД chatdb_test (см. ниже),
+#    где ddl-auto=create пересоздаст схему с актуальным constraint.
+
 # Несколько тестов сразу (список в кавычках)
 cd babich-app && SPRING_JPA_HIBERNATE_DDL_AUTO=update mvn test -Dtest='TestA,TestB,TestC'
 
@@ -40,6 +47,9 @@ cd babich-app && SPRING_JPA_HIBERNATE_DDL_AUTO=update mvn test -Dtest='TestA,Tes
 # (ddl-auto=create пересоздаёт схему разовой chatdb_test).
 docker exec babich-postgres psql -U chatuser -d postgres -c "CREATE DATABASE chatdb_test"
 cd babich-app && SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/chatdb_test mvn -o test
+
+# Подмножество тестов в изолированной БД (та же защита от устаревших constraint):
+cd babich-app && SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/chatdb_test mvn test -Dtest='TestA,TestB'
 
 # После переноса/переименования классов — только чистая сборка:
 # инкрементальная компиляция оставляет старые .class в target/classes, и Spring

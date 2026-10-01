@@ -60,7 +60,7 @@ DTO постов, `LocationPostType`.
 
 Перенос: назначение/снятие должности → методы `LocationUsersService`
 (`appointSystemRole`, `removeSystemRole`) с проверками:
-- локация системная (для системных должностей) или category = BUSINESS/HOME;
+- локация системная (для системных должностей) или тип = BUSINESS/HOME;
 - назначающий имеет право (мэрия — GOVERNOR; банк — BANK_DIRECTOR; и т.д. —
   права переносим из текущего `LocationPostService`);
 - назначаемый — житель того же района (замена проверки membership);
@@ -93,9 +93,8 @@ public enum SystemRoleType { // (Прежде был LocationPostType)
     REAL_ESTATE_DIRECTOR // Владелец рынка недвижимости — 1 слот
 } 
 
-public enum LocationCategoryType {
-    BUSINESS, HOME;
-    // системным локациям категория проставляется при инициализации района
+public enum LocationType { // бывшие PublicLocationType + LocationCategoryType
+    // 8 системных типов района + BUSINESS, HOME — одно поле вместо двух
 }
 ```
 При назначении головы member автоматически получает `role = MODERATOR`.
@@ -105,7 +104,7 @@ public enum LocationCategoryType {
 ### 2.4. Location (изменения)
 
 ```java
-private LocationCategoryType category;  // nullable; проставляется всем при создании
+private LocationType type;               // единая классификация: 8 системных + BUSINESS/HOME
 private Long xpLocation = 0L;           // XP самой локации; только пользовательским
 private Long gangId;                    // без FK — entity Gang появится позже
 ```
@@ -194,7 +193,7 @@ private Long gangId;                    // без FK — entity Gang появи�
 
 | # | Риск | Решение |
 |---|---|---|
-| 1 | Два поля «тип» на Location (`type` — системный, `category` — BUSINESS/HOME) — путаница | Термины зафиксированы: `type` = PublicLocationType (системные), `category` = BUSINESS/HOME. В API/доках не смешивать |
+| 1 | Два поля «тип» на Location (`type` — системный, `category` — BUSINESS/HOME) — путаница | **Решено:** два enum слиты в один `LocationType` (`type` = 8 системных типов + BUSINESS/HOME), поле `category` удалено |
 | 2 | `gangId` без FK — висячие ссылки | Валидация на уровне сервиса; FK при появлении Gang |
 | 3 | Контракт фронта меняется (post → systemRole) | Согласовать API до реализации; фронт правится отдельно |
 | 4 | Удаление LocationPost ломает выборы | `ElectionResultHandlerAdapter` правится в том же изменении; после — прогнать сценарий выборов |
@@ -204,8 +203,8 @@ private Long gangId;                    // без FK — entity Gang появи�
 
 ## 5. Порядок работ
 
-1. Enums: `SystemRoleType`, `LocationCategoryType`, карта допустимых должностей и headRole.
-2. Entities: `LocationUser` (+systemRole, appointedAt), `Location` (+category, xpLocation, gangId), минимальный `Gang`; переименование LocationMember → LocationUser по карте 2.5 (бэк + URL + фронт).
+1. Enums: `SystemRoleType`, `LocationType` (единый, вместо `PublicLocationType` + `LocationCategoryType`), карта допустимых должностей и headRole.
+2. Entities: `LocationUser` (+systemRole, appointedAt), `Location` (type = единый `LocationType`, xpLocation, gangId), минимальный `Gang`; переименование LocationMember → LocationUser по карте 2.5 (бэк + URL + фронт).
 3. `LocationUsersService`: appointSystemRole / removeSystemRole + проверки.
 4. Удаление `LocationPost*` (entity, repo, service, controller, DTO) — перенести логику назначений.
 5. `ChatUserService`: удалить autoJoinSystemLocations.

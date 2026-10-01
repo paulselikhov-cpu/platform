@@ -10,7 +10,7 @@
 com/platform/
 ├── auth/                       # User, JWT, Spring Security (не игровая логика)
 └── chat/
-    ├── config/                 # конфигурация, DataInitializer
+    ├── config/                 # GlobalExceptionHandler
     ├── domain/                 # 1: онтология мира (фундамент)
     │   ├── chatUser/           # ChatUser (персонаж), EnergyService, ChatUserService
     │   ├── district/           # District, DistrictSettings
@@ -71,7 +71,7 @@ com/platform/
 ## Что из концепции ещё НЕ реализовано
 
 Группировки (Gang/GangMember), полиция (PoliceRecord), банк (Deposit),
-рынок (MarketStall/StallInventory), Charter, PostRank, квоты, инвентарь,
+магазин, Charter, PostRank, квоты, инвентарь,
 рынок недвижимости — сущностей в коде нет. Планы — в concept.md и сценариях.
 
 ## Приоритет источников истины

@@ -3,7 +3,7 @@
 ## Обзор
 Реализация системы районов (Districts) и системных локаций (Public Locations) согласно концепции babichchat (разделы 0.1 и 8).
 
-**Важно:** Системные локации — это те же `Location` с флагом `isSystem = true` и заполненным полем `type` (enum `PublicLocationType`). Отдельной сущности `PublicLocation` не существует.
+**Важно:** Системные локации — это те же `Location` с флагом `isSystem = true` и заполненным полем `type` (enum `LocationType`). Отдельной сущности `PublicLocation` не существует.
 
 ## Архитектура
 
@@ -35,7 +35,7 @@
   - `name` — название локации
   - `description` — описание
   - `isSystem` — флаг: `true` = системная, `false` = пользовательская
-  - `type` — `PublicLocationType` (только для `isSystem = true`)
+  - `type` — `LocationType`: у системных — тип районной локации, у пользовательских — `HOME`/`BUSINESS` (заполняется всегда)
   - `inviteCode` — код приглашения (только для пользовательских)
   - `isPublic` — публичная/приватная (только для пользовательских)
   - `rooms` — список комнат локации
@@ -58,21 +58,25 @@
   или при вступлении по invite-коду (`MEMBER`)
 - Для **системных** локаций: запись создаётся только при назначении на должность — авто-членства нет
   (см. «Членство и должности в системных локациях»)
-- Отдельной сущности должности больше нет: прежние `LocationPost` / таблица `location_posts`
-  упразднены, должность хранится в `location_users.system_role`
+- Должность хранится полем `location_users.system_role`
 
-### Типы системных локаций (PublicLocationType)
+### Типы локаций (LocationType)
 
-Согласно концепции (раздел 8), каждый район имеет 8 типов системных локаций:
+Enum `LocationType` (`enums/LocationType.java`, зеркало
+`models/location/location-type.enum.ts` на фронте) классифицирует локацию по
+владению — тремя значениями:
 
-1. **CITY_HALL** — Мэрия (управление районом)
-2. **LENIN_SQUARE** — Площадь Ленина (народные голосования, комната "Тёплые трубы" для бомжей)
-3. **POLICE_STATION** — Полицейский участок (база civic_role)
-4. **PRISON** — Тюрьма (место содержания нарушителей)
-5. **BANK** — Банк (вклады, ипотека)
-6. **WAREHOUSE** — Склад (закупка товаров для бизнеса)
-7. **GENERAL_MARKET** — Рынок (аналог "Авито", свободная аренда прилавков)
-8. **REAL_ESTATE_MARKET** — Рынок недвижимости (купля-продажа локаций)
+1. **SYSTEM** — системная локация района (доступна всем жителям без приглашения)
+2. **DEFAULT** — пользовательская локация без выделенной роли
+3. **BUSINESS** — пользовательская бизнес-локация (заведение), резерв
+
+Конкретный вид системной локации задаётся полем `Location.code`, а не типом —
+коды из `SystemLocationCode` (`CITY_HALL`, `LENIN_SQUARE`, `POLICE_STATION`,
+`PRISON`, `BANK`, `WAREHOUSE`, `GENERAL_MARKET`, `REAL_ESTATE_MARKET`).
+Подробнее — `architecture/chat/location-code-addressing.md`.
+
+`LocationService.createLocation` ставит `DEFAULT` всем новым пользовательским
+локациям.
 
 ### Должности системных локаций (SystemRoleType)
 
@@ -130,7 +134,6 @@ CREATE TABLE locations (
     description TEXT,
     is_system BOOLEAN NOT NULL DEFAULT FALSE,
     type VARCHAR(30),
-    category VARCHAR(20),
     xp_location BIGINT NOT NULL DEFAULT 0,
     gang_id BIGINT,
     invite_code VARCHAR(20) UNIQUE,
@@ -208,15 +211,14 @@ CREATE TABLE location_users (
 babich-app/src/main/java/com/platform/chat/
 ├── entity/
 │   ├── District.java              # Entity района
-│   ├── Location.java              # Единая entity (isSystem + type + category/xpLocation/gangId)
+│   ├── Location.java              # Единая entity (isSystem + type/xpLocation/gangId)
 │   ├── LocationUser.java          # Членство в любой локации + systemRole/appointedAt
 │   ├── Gang.java                  # Минимальная заготовка группировки (без FK)
 │   ├── Room.java                  # Комната (location_id, без public_location_id)
 │   └── ChatUser.java              # Персонаж (district_id)
 ├── enums/
-│   ├── PublicLocationType.java    # Типы системных локаций (8 типов)
-│   ├── LocationCategoryType.java  # BUSINESS / HOME (все локации)
-│   ├── SystemRoleType.java        # GOVERNOR, POLICE_OFFICER и т.д. (бывший LocationPostType)
+│   ├── LocationType.java          # Единая классификация: 8 системных типов + BUSINESS/HOME
+│   ├── SystemRoleType.java        # GOVERNOR, POLICE_OFFICER и т.д.
 │   └── LocationUserRole.java      # OWNER / MODERATOR / MEMBER
 ├── repository/
 │   ├── district/
@@ -255,7 +257,7 @@ babich-app/src/main/java/com/platform/chat/
 
 - **Доступ**: `POST /api/location-users/appoint-system-role?locationId&characterId&systemRole` — ADMIN платформы
   (`ChatRole.ADMIN`) или глава локации (GOVERNOR для мэрии, BANK_DIRECTOR для банка и т.д. — карта `HEAD_ROLES`).
-- **Назначаемый** должен быть жителем того же района (замена прежней проверки membership).
+- **Назначаемый** должен быть жителем того же района.
 - **Локация** должна быть системной; роль — допустимой для её типа (карта `ALLOWED_ROLES`).
 - **Авто-права**: при назначении головы локации member автоматически получает `role = MODERATOR`.
 - **Идемпотентность**: если персонаж уже занимает эту же должность — тихий успех; если должность занята другим — `400` «Должность уже занята».
