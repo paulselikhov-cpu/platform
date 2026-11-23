@@ -84,6 +84,12 @@ cd platform-ui && npm install
 # Запуск dev-сервера
 cd platform-ui && npm run start
 
+# Порт по умолчанию — 4201 (задан в angular.json, serve-standalone).
+# `ng serve <project> --port=N` НЕ работает: билдер федерации отвечает
+# "Unknown argument: port". Если 4201 занят (например, уже запущен сервер),
+# освободить порт — иначе старт падает с "Port 4201 is already in use".
+cd platform-ui && netstat -ano | grep ':4201 '
+
 # Сборка
 cd platform-ui && npx ng build --project babich-chat-ui
 ```

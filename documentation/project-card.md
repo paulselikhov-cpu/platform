@@ -29,7 +29,7 @@
 | Read status / seen-by | [`architecture/chat/read-status.md`](architecture/chat/read-status.md) |
 | Лавина планировщиков при clock leap (fixedRate → fixedDelay) | [`architecture/chat/scheduler-clock-leap-fixed-rate-avalanche.md`](architecture/chat/scheduler-clock-leap-fixed-rate-avalanche.md) |
 | LocationFeature — главное меню локации, разделы и действия | [`architecture/chat/location-feature.md`](architecture/chat/location-feature.md) |
-| Роутинг локации/комнаты (URL как источник истины) и контроль доступа | [`architecture/chat/location-room-routing.md`](architecture/chat/location-room-routing.md) |
+| Роутинг локации/комнаты (URL как источник истины), контроль доступа и разделение логики сессии (`ChatShellState`) и раскладок | [`architecture/chat/location-room-routing.md`](architecture/chat/location-room-routing.md) |
 | Синхронизация LocationUsersMenu | [`architecture/presence/location-users-menu-sync.md`](architecture/presence/location-users-menu-sync.md) |
 | Слайс «чат комнаты» (сообщения, непрочитанное, присутствие) | [`architecture/chat/chat-room-module-layers.md`](architecture/chat/chat-room-module-layers.md) |
 
@@ -43,4 +43,5 @@
 | Модуль заявок: ядро процесса и исполнители | [`architecture/application/application-module-layers.md`](architecture/application/application-module-layers.md) |
 | Границы модулей: двухплоскостная проверка (байткод Modulith + исходники) | [`architecture/modules/module-boundaries.md`](architecture/modules/module-boundaries.md) |
 | архитектура election-сценария | [`scenarios/2. the-first-election.md`](scenarios/2.%20the-first-election.md) (таблицы Layers 1–4) |
+| Мобильный shell: раскладки, навигация в URL, один список пунктов, `⋮`, touch-жесты | [`architecture/ui/mobile-shell.md`](architecture/ui/mobile-shell.md) |
 | Темизация UI: 4 темы, скин через design tokens | [`architecture/ui/theming.md`](architecture/ui/theming.md) |

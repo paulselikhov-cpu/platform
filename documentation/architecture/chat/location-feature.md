@@ -26,29 +26,31 @@
 | `/chat/location/:locationId/feature/:featureId` | `LocationFeatureView` — экран раздела |
 | `/chat/location/:locationId/room/:roomId` | `RoomView` — шапка + лента сообщений |
 
-Все варианты грузят один и тот же `ChatDesktop` (`data.page = 'location'`) —
+Все варианты грузят один и тот же `ChatShell` (`data.page = 'location'`) —
 панель целиком рисуется по данным роута, поэтому deep-link с F5
 восстанавливает и локацию, и раздел, и комнату.
 
 ## Где рисуются действия локации и кнопка «Главная»
 
-Меню «⚡ Действия» фичи (`feature.menuItems`) вынесено **в шапку списка
-комнат** (сайдбар), а не в шапку панели: действия относятся к локации в целом,
-поэтому должны быть доступны на любом её экране, включая список комнат.
+Меню «⚡ Действия» фичи (`feature.menuItems`) рисуется `⋮` в шапке экрана
+(`LocationHeader`) на любом экране локации: действия относятся к локации в целом,
+поэтому доступны и в главном меню локации, и в разделе.
 
-- `ChatDesktop.featureMenuItems` — `computed` от `locationFeature()?.menuItems`;
+- `ChatShellState.featureMenuItems` — `computed` от `locationFeature()?.menuItems`;
   шапка рисует `app-actions-menu` только если список непустой;
-- `LocationMain` / `LocationFeatureView` в `LocationHeader` `menuItems` **не
-  передают** — иначе действие дублировалось бы в двух местах.
+- в шапке списка комнат (сайдбар) меню нет, поэтому `⋮` всегда означает
+  «действия того, что открыто» и никогда не путается с настройками;
+- в комнате `⋮` — это `resolveRoomActions(location, room)`, отдельный источник
+  (сейчас пустой), поэтому фича локации в комнате не показывается.
 
 Кнопка «Главная» (возврат в `location/:id/main`) — **первым элементом списка
 комнат**, отделённая от комнат горизонтальной линией (`room-list__divider`).
-`RoomList` эмитит `homeSelected`, `ChatDesktop` слушает его и вызывает
-`onRoomListHome()`.
+`RoomList` эмитит `homeSelected`, шелл слушает его и вызывает
+`ChatShellState.onRoomListHome()`.
 
 Подсветка активного пункта списка:
 
-- `RoomList.activeHome` — вход от `ChatDesktop.activeHome`
+- `RoomList.activeHome` — вход от `ChatShellState.activeHome`
   (`panel() === 'location' && !selectedRoom() && !selectedFeatureId()`),
   то есть ровно на `location/:id/main`; активное состояние рисуется так же,
   как у выбранной комнаты (`--color-accent-muted` + акцентный текст).
@@ -56,7 +58,7 @@
 ## Состояние фичи живёт дольше компонента: `LocationFeatureStore`
 
 `…/main`, `…/feature/:id` и `…/room/:id` — три отдельных routeConfig, поэтому
-**каждый** переход (в том числе между комнатами) пересоздаёт `ChatDesktop`.
+**каждый** переход (в том числе между комнатами) пересоздаёт шелл.
 Если бы фича создавалась прямо в компоненте, её состояние обнулялось бы на
 каждом шаге — например, `employeeAuthorized` в мэрии слетал бы при уходе в
 комнату и обратно.
@@ -69,13 +71,13 @@
   и создаёт новую с `onEnter()`;
 - `release()` — вызывает teardown (например, останавливает поллинг выборов).
 
-Освобождает фичу `ChatDesktop.stopLocationFeature()` — при уходе из локации:
+Освобождает фичу `ChatShellState.stopLocationFeature()` — при уходе из локации:
 смена локации, `/chat`, `create`/`find`/`work`, ошибка доступа. В `ngOnDestroy`
 release **не** вызывается намеренно: пересоздание компонента между комнатами —
 не повод терять состояние фичи. Смена локации чистится самим `acquire()`
 (разный ключ → `release()`).
 
-## Жизненный цикл: `ChatDesktop`
+## Жизненный цикл фичи
 
 Фича создаётся **на локацию** (не на комнату) и живёт, пока открыта локация:
 
@@ -95,7 +97,7 @@ private buildLocationFeature(location: ILocation): void {
 - `onEnter()` может вернуть teardown — так `LeninSquareFeature` останавливает
   поллинг выборов (`stopLocationFeature()` вызывается при смене/закрытии
   локации);
-- `injector` — DI-контекст `ChatDesktop`: фича резолвит сервисы через
+- `injector` — DI-контекст шелла: фича резолвит сервисы через
   `runInInjectionContext` (фича не декорирована `@Injectable`);
 - `applyFeature(featureId)` сверяет `featureId` из URL со `screens` фичи;
   неизвестный id → редирект на главное меню.

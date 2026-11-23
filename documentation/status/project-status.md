@@ -19,6 +19,7 @@
 | R2: STOMP Broker Relay (RabbitMQ/Artemis) вместо SimpleBroker | ❌ Не начат |
 | R3: Presence/online-счётчики/unread → Redis | ❌ Не начат |
 | R4: прод-конфиг (show-sql, ddl-auto → миграции, пул HikariCP, индексы) | ❌ Не начат |
+| Мобильная раскладка чата (`ChatShell`/`ChatMobile`, вкладки, пузыри, жесты) | ✅ Реализовано (см. architecture/ui/mobile-shell.md) |
 
 ### Безопасность и границы слоёв
 
