@@ -8,3 +8,4 @@
 | №2. Первые выборы | ✅ Реализовано (backend + frontend, event-driven: ElectionResultHandlerAdapter + PollClosedEvent) | [2. the-first-election.md](2.%20the-first-election.md) |
 | №3.1. Заявка на рабочую лицензию | ✅ Реализовано (RegisterWorkLicence handler, модерация сотрудником мэрии) | [3.1 work-licence-application.md](3.1%20work-licence-application.md) |
 | №3.2. Меню работ | ❌ Черновик (не реализовано) | [3.2 works-menu.md](3.2%20works-menu.md) |
+| №4. Продуктовый магазин | 🟡 В работе (фронт: Room Feature + корзина, бэк: не начат) | [4. product-shop.md](4.%20product-shop.md) |
