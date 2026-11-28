@@ -102,7 +102,7 @@ echo ==========================================
 echo ✅ SUCCESS! Babich Chat standalone ready!
 echo ==========================================
 echo.
-echo 🌐 Standalone: http://localhost/babich-chat/
+echo 🌐 Standalone: http://192.168.0.102/babich-chat/login
 echo 🌐 Via shell:  http://localhost/platform/chat
 echo.
 echo 📋 Useful commands:
